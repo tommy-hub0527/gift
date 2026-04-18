@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gift - POSレジ</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-left">
+        <h1 class="logo">Gift</h1>
+      </div>
+      <nav class="header-nav">
+        <button class="nav-btn active" data-view="order">注文</button>
+        <button class="nav-btn" data-view="history">履歴</button>
+        <button class="nav-btn" data-view="summary">売上</button>
+      </nav>
+      <div class="header-right">
+        <span class="clock" id="clock"></span>
+      </div>
+    </header>
+
+    <!-- 注文画面 -->
+    <main class="main-content" id="view-order">
+      <!-- 左: メニュー -->
+      <section class="menu-panel">
+        <div class="category-tabs" id="category-tabs"></div>
+        <div class="menu-grid" id="menu-grid"></div>
+      </section>
+
+      <!-- 右: カート -->
+      <aside class="cart-panel">
+        <div class="cart-header">
+          <h2>伝票</h2>
+          <button class="btn-clear" id="btn-clear-cart">全消去</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+          <div class="cart-empty">商品を選択してください</div>
+        </div>
+        <div class="cart-footer">
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span>小計</span>
+              <span id="subtotal">¥0</span>
+            </div>
+            <div class="summary-row">
+              <span>TAX (10%)</span>
+              <span id="tax">¥0</span>
+            </div>
+            <div class="summary-row sc-row">
+              <label class="sc-toggle">
+                <input type="checkbox" id="sc-checkbox" checked>
+                <span class="sc-slider"></span>
+              </label>
+              <span>SC (15%)</span>
+              <span id="sc">¥0</span>
+            </div>
+            <div class="summary-row total">
+              <span>合計</span>
+              <span id="total">¥0</span>
+            </div>
+          </div>
+          <button class="btn-checkout" id="btn-checkout" disabled>会計へ進む</button>
+        </div>
+      </aside>
+    </main>
+
+    <!-- 履歴画面 -->
+    <main class="main-content hidden" id="view-history">
+      <section class="history-panel">
+        <h2 class="panel-title">注文履歴</h2>
+        <div class="history-list" id="history-list">
+          <div class="empty-state">まだ注文履歴がありません</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 売上画面 -->
+    <main class="main-content hidden" id="view-summary">
+      <section class="summary-panel">
+        <h2 class="panel-title">売上サマリー</h2>
+        <div class="summary-cards" id="summary-cards"></div>
+        <div class="summary-detail">
+          <h3>カテゴリ別売上</h3>
+          <div class="category-sales" id="category-sales"></div>
+        </div>
+        <div class="summary-detail">
+          <h3>人気メニュー TOP5</h3>
+          <div class="popular-items" id="popular-items"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 会計モーダル -->
+    <div class="modal-overlay hidden" id="modal-checkout">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>お会計</h2>
+          <button class="modal-close" id="btn-close-checkout">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="checkout-total">
+            <span>合計金額</span>
+            <span class="checkout-amount" id="checkout-amount">¥0</span>
+          </div>
+          <div class="payment-methods">
+            <button class="payment-btn active" data-method="cash">💴 現金</button>
+            <button class="payment-btn" data-method="card">💳 カード</button>
+            <button class="payment-btn" data-method="qr">📱 QR決済</button>
+          </div>
+          <div class="cash-input" id="cash-input-section">
+            <label>お預かり金額</label>
+            <div class="amount-display" id="received-display">¥0</div>
+            <div class="numpad" id="numpad">
+              <button class="num-btn" data-val="1">1</button>
+              <button class="num-btn" data-val="2">2</button>
+              <button class="num-btn" data-val="3">3</button>
+              <button class="num-btn" data-val="4">4</button>
+              <button class="num-btn" data-val="5">5</button>
+              <button class="num-btn" data-val="6">6</button>
+              <button class="num-btn" data-val="7">7</button>
+              <button class="num-btn" data-val="8">8</button>
+              <button class="num-btn" data-val="9">9</button>
+              <button class="num-btn" data-val="00">00</button>
+              <button class="num-btn" data-val="0">0</button>
+              <button class="num-btn del" data-val="del">⌫</button>
+            </div>
+            <div class="quick-amounts">
+              <button class="quick-btn" data-amount="5000">¥5,000</button>
+              <button class="quick-btn" data-amount="10000">¥10,000</button>
+              <button class="quick-btn" data-amount="30000">¥30,000</button>
+              <button class="quick-btn" data-amount="50000">¥50,000</button>
+              <button class="quick-btn" data-amount="100000">¥100,000</button>
+              <button class="quick-btn exact" id="btn-exact">ぴったり</button>
+            </div>
+            <div class="change-display" id="change-display">
+              <span>おつり</span>
+              <span id="change-amount">¥0</span>
+            </div>
+          </div>
+          <button class="btn-confirm-payment" id="btn-confirm-payment" disabled>支払いを確定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- レシートモーダル -->
+    <div class="modal-overlay hidden" id="modal-receipt">
+      <div class="modal modal-receipt">
+        <div class="modal-header">
+          <h2>レシート</h2>
+          <button class="modal-close" id="btn-close-receipt">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="receipt" id="receipt-content"></div>
+          <div class="receipt-actions">
+            <button class="btn-print" id="btn-print">🖨️ 印刷</button>
+            <button class="btn-done" id="btn-done">完了</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
