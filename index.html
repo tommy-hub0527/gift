@@ -38,7 +38,13 @@
       <aside class="cart-panel">
         <div class="cart-header">
           <h2>伝票</h2>
-          <button class="btn-clear" id="btn-clear-cart">全消去</button>
+          <div class="cart-header-actions">
+            <div class="cast-select">
+              <label>👑 推しキャスト</label>
+              <input type="text" id="cast-input" placeholder="キャスト名" autocomplete="off">
+            </div>
+            <button class="btn-clear" id="btn-clear-cart">全消去</button>
+          </div>
         </div>
         <div class="cart-items" id="cart-items">
           <div class="cart-empty">商品を選択してください</div>
@@ -60,6 +66,10 @@
               </label>
               <span>SC (15%)</span>
               <span id="sc">¥0</span>
+            </div>
+            <div class="summary-row card-fee-row hidden" id="card-fee-row">
+              <span>カード手数料 (8%)</span>
+              <span id="card-fee">¥0</span>
             </div>
             <div class="summary-row total">
               <span>合計</span>
@@ -94,6 +104,10 @@
           <h3>人気メニュー TOP5</h3>
           <div class="popular-items" id="popular-items"></div>
         </div>
+        <div class="summary-detail">
+          <h3>👑 キャスト別売上</h3>
+          <div class="cast-sales" id="cast-sales"></div>
+        </div>
       </section>
     </main>
 
@@ -108,6 +122,9 @@
           <div class="checkout-total">
             <span>合計金額</span>
             <span class="checkout-amount" id="checkout-amount">¥0</span>
+          </div>
+          <div class="checkout-card-fee hidden" id="checkout-card-fee">
+            <span>※ カード手数料 8% 込み</span>
           </div>
           <div class="payment-methods">
             <button class="payment-btn active" data-method="cash">💴 現金</button>
@@ -145,6 +162,30 @@
             </div>
           </div>
           <button class="btn-confirm-payment" id="btn-confirm-payment" disabled>支払いを確定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- その他フリー入力モーダル -->
+    <div class="modal-overlay hidden" id="modal-custom">
+      <div class="modal modal-custom">
+        <div class="modal-header">
+          <h2>📝 その他（フリー入力）</h2>
+          <button class="modal-close" id="btn-close-custom">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="custom-field">
+            <label>商品名</label>
+            <input type="text" id="custom-name" placeholder="商品名を入力" autocomplete="off">
+          </div>
+          <div class="custom-field">
+            <label>金額（税抜）</label>
+            <div class="custom-price-input">
+              <span class="yen-prefix">¥</span>
+              <input type="number" id="custom-price" placeholder="0" min="0" step="100">
+            </div>
+          </div>
+          <button class="btn-add-custom" id="btn-add-custom">伝票に追加</button>
         </div>
       </div>
     </div>

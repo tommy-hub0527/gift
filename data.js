@@ -9,6 +9,7 @@ const MENU_DATA = {
     { id: "original", name: "オリジナル", emoji: "💎" },
     { id: "wine", name: "ワイン", emoji: "🍷" },
     { id: "food", name: "フード", emoji: "🍫" },
+    { id: "other", name: "その他", emoji: "📝" },
   ],
   items: [
     // ===== システム =====
@@ -20,6 +21,7 @@ const MENU_DATA = {
     { id: 6,  name: "推しドリンク", price: 2000, category: "system", emoji: "💖" },
     { id: 7,  name: "場内推しドリンク", price: 1000, category: "system", emoji: "💗" },
     { id: 8,  name: "キャストドリンク", price: 1000, category: "system", emoji: "🍹" },
+    { id: 9,  name: "キャスト割ものピッチャー", price: 500, category: "system", emoji: "🫗" },
 
     // ===== ショット =====
     { id: 10, name: "イエガー", price: 1500, category: "shot", emoji: "🥃" },
@@ -28,6 +30,7 @@ const MENU_DATA = {
     { id: 13, name: "コカボム", price: 2000, category: "shot", emoji: "💣" },
     { id: 14, name: "テキーラ観覧車", price: 20000, category: "shot", emoji: "🎡" },
     { id: 15, name: "クライナーセット", price: 30000, category: "shot", emoji: "🎉" },
+    { id: 16, name: "テキーラ地球儀", price: 50000, category: "shot", emoji: "🌍" },
 
     // ===== ドリンク (+1,000円メニュー & ソフトドリンク) =====
     { id: 20, name: "瓶コーラ", price: 1000, category: "drink", emoji: "🥤" },

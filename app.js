@@ -9,6 +9,7 @@ const state = {
   receivedAmount: "",
   paymentMethod: "cash",
   scEnabled: true,
+  customIdCounter: 9000,
 };
 
 // ============================
@@ -31,8 +32,13 @@ function getCartSC() {
   return Math.floor(getCartSubtotal() * 0.15);
 }
 
+function getCartCardFee() {
+  if (state.paymentMethod !== "card") return 0;
+  return Math.floor((getCartSubtotal() + getCartTax() + getCartSC()) * 0.08);
+}
+
 function getCartTotal() {
-  return getCartSubtotal() + getCartTax() + getCartSC();
+  return getCartSubtotal() + getCartTax() + getCartSC() + getCartCardFee();
 }
 
 function saveOrders() {
@@ -56,6 +62,10 @@ function formatTime(date) {
 function formatDateTime(dateStr) {
   const d = new Date(dateStr);
   return `${d.getMonth() + 1}/${d.getDate()} ${formatTime(d)}`;
+}
+
+function getCastName() {
+  return document.getElementById("cast-input").value.trim();
 }
 
 // ============================
@@ -121,12 +131,24 @@ function renderCategories() {
 // ============================
 function renderMenu() {
   const container = document.getElementById("menu-grid");
+
+  if (state.currentCategory === "other") {
+    container.innerHTML =
+      `<button class="menu-item menu-item-custom" id="btn-open-custom">
+        <span class="emoji">📝</span>
+        <span class="name">フリー入力</span>
+        <span class="price">自由金額</span>
+      </button>`;
+    document.getElementById("btn-open-custom").addEventListener("click", openCustomModal);
+    return;
+  }
+
   const items =
     state.currentCategory === "all"
       ? MENU_DATA.items
       : MENU_DATA.items.filter((i) => i.category === state.currentCategory);
 
-  container.innerHTML = items
+  let html = items
     .map(
       (item) =>
         `<button class="menu-item" data-id="${item.id}">
@@ -137,10 +159,64 @@ function renderMenu() {
     )
     .join("");
 
-  container.querySelectorAll(".menu-item").forEach((el) => {
+  if (state.currentCategory === "all") {
+    html +=
+      `<button class="menu-item menu-item-custom" id="btn-open-custom">
+        <span class="emoji">📝</span>
+        <span class="name">フリー入力</span>
+        <span class="price">自由金額</span>
+      </button>`;
+  }
+
+  container.innerHTML = html;
+
+  container.querySelectorAll(".menu-item:not(.menu-item-custom)").forEach((el) => {
     el.addEventListener("click", () => addToCart(parseInt(el.dataset.id)));
   });
+
+  const customBtn = document.getElementById("btn-open-custom");
+  if (customBtn) customBtn.addEventListener("click", openCustomModal);
 }
+
+// ============================
+// Custom Item Modal
+// ============================
+function openCustomModal() {
+  document.getElementById("modal-custom").classList.remove("hidden");
+  document.getElementById("custom-name").value = "";
+  document.getElementById("custom-price").value = "";
+  document.getElementById("custom-name").focus();
+}
+
+function closeCustomModal() {
+  document.getElementById("modal-custom").classList.add("hidden");
+}
+
+document.getElementById("btn-close-custom").addEventListener("click", closeCustomModal);
+
+document.getElementById("btn-add-custom").addEventListener("click", () => {
+  const name = document.getElementById("custom-name").value.trim();
+  const price = parseInt(document.getElementById("custom-price").value) || 0;
+
+  if (!name || price <= 0) {
+    alert("商品名と金額を入力してください");
+    return;
+  }
+
+  state.customIdCounter++;
+  const customItem = {
+    id: state.customIdCounter,
+    name: name,
+    price: price,
+    category: "other",
+    emoji: "📝",
+    qty: 1,
+    isCustom: true,
+  };
+  state.cart.push(customItem);
+  renderCart();
+  closeCustomModal();
+});
 
 // ============================
 // Cart
@@ -171,6 +247,7 @@ function updateQty(itemId, delta) {
 
 function clearCart() {
   state.cart = [];
+  document.getElementById("cast-input").value = "";
   renderCart();
 }
 
@@ -212,6 +289,16 @@ function renderCart() {
   document.getElementById("subtotal").textContent = formatPrice(getCartSubtotal());
   document.getElementById("tax").textContent = formatPrice(getCartTax());
   document.getElementById("sc").textContent = formatPrice(getCartSC());
+
+  const cardFeeRow = document.getElementById("card-fee-row");
+  const cardFee = getCartCardFee();
+  if (state.paymentMethod === "card" && state.cart.length > 0) {
+    cardFeeRow.classList.remove("hidden");
+    document.getElementById("card-fee").textContent = formatPrice(cardFee);
+  } else {
+    cardFeeRow.classList.add("hidden");
+  }
+
   document.getElementById("total").textContent = formatPrice(getCartTotal());
   updateMobileBadge();
 }
@@ -224,9 +311,18 @@ document.getElementById("btn-clear-cart").addEventListener("click", clearCart);
 function openCheckout() {
   const modal = document.getElementById("modal-checkout");
   modal.classList.remove("hidden");
-  document.getElementById("checkout-amount").textContent = formatPrice(getCartTotal());
+
+  const total = getCartTotal();
+  document.getElementById("checkout-amount").textContent = formatPrice(total);
+
+  const cardFeeNotice = document.getElementById("checkout-card-fee");
+  if (state.paymentMethod === "card") {
+    cardFeeNotice.classList.remove("hidden");
+  } else {
+    cardFeeNotice.classList.add("hidden");
+  }
+
   state.receivedAmount = "";
-  state.paymentMethod = "cash";
   updatePaymentUI();
   updateReceivedDisplay();
 }
@@ -242,6 +338,7 @@ document.getElementById("btn-close-checkout").addEventListener("click", closeChe
 document.querySelectorAll(".payment-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     state.paymentMethod = btn.dataset.method;
+    renderCart();
     updatePaymentUI();
   });
 });
@@ -253,6 +350,16 @@ function updatePaymentUI() {
 
   const cashSection = document.getElementById("cash-input-section");
   const confirmBtn = document.getElementById("btn-confirm-payment");
+  const cardFeeNotice = document.getElementById("checkout-card-fee");
+
+  const total = getCartTotal();
+  document.getElementById("checkout-amount").textContent = formatPrice(total);
+
+  if (state.paymentMethod === "card") {
+    cardFeeNotice.classList.remove("hidden");
+  } else {
+    cardFeeNotice.classList.add("hidden");
+  }
 
   if (state.paymentMethod === "cash") {
     cashSection.classList.remove("hidden");
@@ -327,11 +434,13 @@ document.getElementById("btn-confirm-payment").addEventListener("click", () => {
     subtotal: getCartSubtotal(),
     tax: getCartTax(),
     sc: getCartSC(),
+    cardFee: getCartCardFee(),
     total,
     received,
     change: Math.max(0, change),
     method: state.paymentMethod,
     scEnabled: state.scEnabled,
+    cast: getCastName(),
     timestamp: new Date().toISOString(),
   };
 
@@ -363,11 +472,20 @@ function showReceipt(order) {
     ? `<div class="receipt-item"><span>SC (15%)</span><span>${formatPrice(order.sc)}</span></div>`
     : "";
 
+  const cardFeeHtml = order.cardFee > 0
+    ? `<div class="receipt-item"><span>カード手数料 (8%)</span><span>${formatPrice(order.cardFee)}</span></div>`
+    : "";
+
+  const castHtml = order.cast
+    ? `<div class="receipt-cast">👑 推しキャスト: ${order.cast}</div>`
+    : "";
+
   content.innerHTML = `
     <div class="receipt-header">
       <div class="shop-name">Gift</div>
       <div class="shop-info">ご来店ありがとうございます</div>
     </div>
+    ${castHtml}
     <div class="receipt-items">${itemsHtml}</div>
     <div class="receipt-totals">
       <div class="receipt-item">
@@ -379,6 +497,7 @@ function showReceipt(order) {
         <span>${formatPrice(order.tax)}</span>
       </div>
       ${scHtml}
+      ${cardFeeHtml}
       <div class="receipt-item receipt-grand-total">
         <span>合計</span>
         <span>${formatPrice(order.total)}</span>
@@ -432,10 +551,14 @@ function renderHistory() {
   container.innerHTML = orders
     .map((order) => {
       const itemsText = order.items.map((i) => `${i.name}×${i.qty}`).join("、");
+      const castBadge = order.cast
+        ? `<span class="order-cast">👑 ${order.cast}</span>`
+        : "";
       return `
         <div class="history-item">
           <span class="order-num">#${order.id.toString().padStart(4, "0")}</span>
           <div class="order-detail">
+            ${castBadge}
             <div class="order-items-text">${itemsText}</div>
             <div class="order-time">${formatDateTime(order.timestamp)}</div>
           </div>
@@ -539,6 +662,39 @@ function renderSummary() {
           </div>`
       )
       .join("");
+  }
+
+  // Cast sales ranking
+  const castSales = {};
+  orders.forEach((order) => {
+    if (order.cast) {
+      if (!castSales[order.cast]) {
+        castSales[order.cast] = { name: order.cast, total: 0, count: 0 };
+      }
+      castSales[order.cast].total += order.total;
+      castSales[order.cast].count++;
+    }
+  });
+  const castContainer = document.getElementById("cast-sales");
+  if (castContainer) {
+    const castList = Object.values(castSales).sort((a, b) => b.total - a.total);
+    if (castList.length === 0) {
+      castContainer.innerHTML = '<div class="empty-state">まだデータがありません</div>';
+    } else {
+      const maxCast = castList[0].total || 1;
+      castContainer.innerHTML = castList
+        .map(
+          (cast, i) =>
+            `<div class="category-sale-row">
+              <span class="sale-label">👑 ${cast.name}</span>
+              <div class="sale-bar-container">
+                <div class="sale-bar" style="width: ${(cast.total / maxCast) * 100}%"></div>
+              </div>
+              <span class="sale-amount">${formatPrice(cast.total)} (${cast.count}件)</span>
+            </div>`
+        )
+        .join("");
+    }
   }
 }
 

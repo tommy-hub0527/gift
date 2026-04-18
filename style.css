@@ -257,10 +257,59 @@ button:active {
   border-bottom: 1px solid var(--border);
 }
 
+.cart-header {
+  flex-direction: column;
+  gap: 8px;
+}
+
 .cart-header h2 {
   font-size: 15px;
   font-weight: 700;
   color: var(--gold-light);
+}
+
+.cart-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.cast-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.cast-select label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.cast-select input {
+  flex: 1;
+  padding: 5px 10px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  min-width: 0;
+}
+
+.cast-select input:focus {
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+.cast-select input::placeholder {
+  color: var(--text-muted);
 }
 
 .btn-clear {
@@ -462,6 +511,20 @@ button:active {
 .sc-toggle input:checked + .sc-slider::before {
   transform: translateX(16px);
   background: var(--gold-light);
+}
+
+.card-fee-row {
+  color: var(--gold) !important;
+  font-weight: 600;
+}
+
+.checkout-card-fee {
+  text-align: center;
+  font-size: 12px;
+  color: var(--gold);
+  margin-top: -10px;
+  margin-bottom: 14px;
+  font-weight: 600;
 }
 
 .btn-checkout {
@@ -1110,6 +1173,120 @@ button:active {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* ============================
+   Custom Item Modal
+   ============================ */
+.modal-custom {
+  width: 400px;
+}
+
+.custom-field {
+  margin-bottom: 16px;
+}
+
+.custom-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.custom-field input[type="text"],
+.custom-field input[type="number"] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+}
+
+.custom-field input:focus {
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+.custom-field input::placeholder {
+  color: var(--text-muted);
+}
+
+.custom-price-input {
+  position: relative;
+}
+
+.yen-prefix {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.custom-price-input input {
+  padding-left: 32px !important;
+}
+
+.btn-add-custom {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #1a1a1a;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-add-custom:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+}
+
+/* Menu item custom styling */
+.menu-item-custom {
+  border-style: dashed;
+  border-color: var(--gold-dark);
+  background: var(--gold-glow);
+}
+
+.menu-item-custom:hover {
+  border-color: var(--gold);
+  background: rgba(201, 169, 110, 0.2);
+}
+
+/* ============================
+   Receipt Cast
+   ============================ */
+.receipt-cast {
+  text-align: center;
+  padding: 8px;
+  margin-bottom: 12px;
+  background: #fef9ee;
+  border: 1px solid #e8d5a8;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8b6914;
+}
+
+/* History cast badge */
+.order-cast {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c9a96e;
+  background: rgba(201, 169, 110, 0.12);
+  padding: 2px 8px;
+  border-radius: 50px;
+  margin-bottom: 2px;
+  border: 1px solid rgba(201, 169, 110, 0.2);
 }
 
 /* ============================
