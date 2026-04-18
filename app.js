@@ -213,6 +213,7 @@ function renderCart() {
   document.getElementById("tax").textContent = formatPrice(getCartTax());
   document.getElementById("sc").textContent = formatPrice(getCartSC());
   document.getElementById("total").textContent = formatPrice(getCartTotal());
+  updateMobileBadge();
 }
 
 document.getElementById("btn-clear-cart").addEventListener("click", clearCart);
@@ -403,11 +404,13 @@ function showReceipt(order) {
 document.getElementById("btn-close-receipt").addEventListener("click", () => {
   document.getElementById("modal-receipt").classList.add("hidden");
   clearCart();
+  closeMobileCart();
 });
 
 document.getElementById("btn-done").addEventListener("click", () => {
   document.getElementById("modal-receipt").classList.add("hidden");
   clearCart();
+  closeMobileCart();
 });
 
 document.getElementById("btn-print").addEventListener("click", () => {
@@ -537,6 +540,35 @@ function renderSummary() {
       )
       .join("");
   }
+}
+
+// ============================
+// Mobile Cart
+// ============================
+const mobileCartBtn = document.getElementById("mobile-cart-btn");
+const mobileCartOverlay = document.getElementById("mobile-cart-overlay");
+const cartPanel = document.querySelector(".cart-panel");
+
+function openMobileCart() {
+  cartPanel.classList.add("open");
+  mobileCartOverlay.classList.remove("hidden");
+  mobileCartBtn.classList.add("hidden");
+}
+
+function closeMobileCart() {
+  cartPanel.classList.remove("open");
+  mobileCartOverlay.classList.add("hidden");
+  mobileCartBtn.classList.remove("hidden");
+}
+
+mobileCartBtn.addEventListener("click", openMobileCart);
+mobileCartOverlay.addEventListener("click", closeMobileCart);
+
+function updateMobileBadge() {
+  const badge = document.getElementById("mobile-cart-badge");
+  const count = state.cart.reduce((sum, item) => sum + item.qty, 0);
+  badge.textContent = count;
+  badge.classList.toggle("hidden-badge", count === 0);
 }
 
 // ============================

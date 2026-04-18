@@ -1113,6 +1113,259 @@ button:active {
 }
 
 /* ============================
+   Mobile Cart Button
+   ============================ */
+.mobile-cart-btn {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #1a1a1a;
+  font-size: 24px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(201, 169, 110, 0.4);
+  z-index: 50;
+  border: none;
+}
+
+.mobile-cart-icon {
+  font-size: 26px;
+}
+
+.mobile-cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--danger);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+.mobile-cart-badge.hidden-badge {
+  display: none;
+}
+
+.mobile-cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 59;
+  backdrop-filter: blur(4px);
+}
+
+/* ============================
+   Mobile Responsive
+   ============================ */
+@media (max-width: 768px) {
+  .header {
+    height: 50px;
+    padding: 0 12px;
+  }
+
+  .logo {
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+
+  .header-nav {
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .nav-btn {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .clock {
+    display: none;
+  }
+
+  .main-content {
+    height: calc(100vh - 50px);
+  }
+
+  /* メニューをフル幅に */
+  #view-order {
+    flex-direction: column;
+    position: relative;
+  }
+
+  .menu-panel {
+    width: 100%;
+    flex: 1;
+  }
+
+  .category-tabs {
+    padding: 10px 12px;
+    gap: 4px;
+  }
+
+  .category-tab {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+    padding-bottom: 90px;
+  }
+
+  .menu-item {
+    padding: 12px 6px;
+    gap: 4px;
+  }
+
+  .menu-item .emoji {
+    font-size: 22px;
+  }
+
+  .menu-item .name {
+    font-size: 11px;
+    min-height: 2.2em;
+  }
+
+  .menu-item .price {
+    font-size: 12px;
+  }
+
+  /* カートをスライドパネルに */
+  .cart-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 80vh;
+    max-height: 80vh;
+    z-index: 60;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+    transition: transform 300ms ease;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .cart-panel.open {
+    transform: translateY(0);
+  }
+
+  .cart-header {
+    padding: 12px 16px;
+    position: relative;
+  }
+
+  .cart-header::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--text-muted);
+  }
+
+  .cart-header h2 {
+    padding-top: 8px;
+  }
+
+  .cart-items {
+    padding: 8px 12px;
+  }
+
+  .cart-footer {
+    padding: 12px 16px;
+  }
+
+  /* フローティングカートボタン表示 */
+  .mobile-cart-btn {
+    display: flex;
+  }
+
+  /* モーダルをモバイル対応 */
+  .modal {
+    width: 95vw;
+    max-height: 92vh;
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-receipt {
+    width: 95vw;
+  }
+
+  .checkout-amount {
+    font-size: 22px;
+  }
+
+  .amount-display {
+    font-size: 24px;
+    padding: 8px 14px;
+  }
+
+  .num-btn {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .quick-amounts {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  .quick-btn {
+    padding: 7px 4px;
+    font-size: 11px;
+  }
+
+  /* 履歴・売上 */
+  #view-history,
+  #view-summary {
+    padding: 16px 12px;
+  }
+
+  .history-item {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .history-item .order-items-text {
+    max-width: 200px;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .summary-card .card-value {
+    font-size: 20px;
+  }
+}
+
+/* ============================
    Print Styles
    ============================ */
 @media print {
