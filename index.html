@@ -137,13 +137,17 @@
               <button class="source-btn" data-source="ポケパラ">📱 ポケパラ</button>
               <button class="source-btn" data-source="看板">🪧 看板</button>
               <button class="source-btn" data-source="インスタ・Tiktok">📸 インスタ・Tiktok</button>
+              <button class="source-btn source-btn-other" data-source="その他">❓ その他</button>
             </div>
           </div>
           <!-- ステップ2b: リピート→推しキャスト入力 -->
           <div id="table-step2-repeat" class="hidden">
             <p class="modal-label">推しキャスト名を入力</p>
             <input type="text" id="table-cast-input" class="modal-text-input" placeholder="キャスト名" autocomplete="off">
-            <button class="btn-confirm-cast" id="btn-confirm-cast">決定</button>
+            <div class="repeat-btns">
+              <button class="btn-confirm-cast" id="btn-confirm-cast">決定</button>
+              <button class="btn-free-repeat" id="btn-free-repeat">フリー（指名なし）</button>
+            </div>
           </div>
         </div>
       </div>

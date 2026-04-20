@@ -550,6 +550,8 @@ button:active {
   z-index: 100;
   backdrop-filter: blur(8px);
   animation: fadeIn 200ms ease;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: auto;
 }
 
 @keyframes fadeIn {
@@ -1265,6 +1267,12 @@ button:active {
   color: var(--text-muted);
 }
 
+.repeat-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .btn-confirm-cast {
   width: 100%;
   padding: 14px;
@@ -1277,6 +1285,27 @@ button:active {
 
 .btn-confirm-cast:hover {
   background: linear-gradient(135deg, var(--gold), var(--gold-light));
+}
+
+.btn-free-repeat {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-free-repeat:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.source-btn-other {
+  grid-column: 1 / -1;
 }
 
 /* Discount item in cart */

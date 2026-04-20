@@ -256,6 +256,22 @@ function renderMenu() {
 // ============================
 // Table Selection Modal
 // ============================
+function lockScroll() {
+  document.body.style.overflow = "hidden";
+  document.body.style.position = "fixed";
+  document.body.style.width = "100%";
+  document.body.style.top = `-${window.scrollY}px`;
+}
+
+function unlockScroll() {
+  const scrollY = document.body.style.top;
+  document.body.style.overflow = "";
+  document.body.style.position = "";
+  document.body.style.width = "";
+  document.body.style.top = "";
+  window.scrollTo(0, 0);
+}
+
 function openTableModal(tableNum) {
   document.getElementById("modal-table-title").textContent = `🪑 卓 ${tableNum}`;
   document.getElementById("table-step1").classList.remove("hidden");
@@ -263,10 +279,12 @@ function openTableModal(tableNum) {
   document.getElementById("table-step2-repeat").classList.add("hidden");
   document.getElementById("table-cast-input").value = "";
   document.getElementById("modal-table").classList.remove("hidden");
+  lockScroll();
 }
 
 function closeTableModal() {
   document.getElementById("modal-table").classList.add("hidden");
+  unlockScroll();
 }
 
 function confirmTable(type, source, cast) {
@@ -278,12 +296,15 @@ function confirmTable(type, source, cast) {
 
   updateTableBadge();
   renderCart();
-  renderMenu();
   closeTableModal();
 
   state.currentCategory = "system";
   renderCategories();
   renderMenu();
+
+  // モバイルでスクロール位置がずれる問題を修正
+  window.scrollTo(0, 0);
+  document.querySelector(".menu-grid").scrollTop = 0;
 }
 
 function updateTableBadge() {
@@ -328,6 +349,10 @@ document.getElementById("btn-confirm-cast").addEventListener("click", () => {
   const castName = document.getElementById("table-cast-input").value.trim();
   if (!castName) { alert("キャスト名を入力してください"); return; }
   confirmTable("repeat", null, castName);
+});
+
+document.getElementById("btn-free-repeat").addEventListener("click", () => {
+  confirmTable("repeat", null, null);
 });
 
 // ============================
@@ -773,23 +798,23 @@ function renderSummary() {
     ).join("");
   }
 
-  // Cast sales
+  // Cast sales (小計ベース)
   const castSales = {};
   todayOrders.forEach((order) => {
     if (order.cast) {
-      if (!castSales[order.cast]) castSales[order.cast] = { name: order.cast, total: 0, count: 0 };
-      castSales[order.cast].total += order.total;
+      if (!castSales[order.cast]) castSales[order.cast] = { name: order.cast, subtotal: 0, count: 0 };
+      castSales[order.cast].subtotal += (order.subtotal || 0);
       castSales[order.cast].count++;
     }
   });
   const castContainer = document.getElementById("cast-sales");
-  const castList = Object.values(castSales).sort((a, b) => b.total - a.total);
+  const castList = Object.values(castSales).sort((a, b) => b.subtotal - a.subtotal);
   if (castList.length === 0) {
     castContainer.innerHTML = '<div class="empty-state">まだデータがありません</div>';
   } else {
-    const maxCast = castList[0].total || 1;
+    const maxCast = castList[0].subtotal || 1;
     castContainer.innerHTML = castList.map((c) =>
-      `<div class="category-sale-row"><span class="sale-label">👑 ${c.name}</span><div class="sale-bar-container"><div class="sale-bar" style="width:${(c.total / maxCast) * 100}%"></div></div><span class="sale-amount">${formatPrice(c.total)} (${c.count}件)</span></div>`
+      `<div class="category-sale-row"><span class="sale-label">👑 ${c.name}</span><div class="sale-bar-container"><div class="sale-bar" style="width:${(c.subtotal / maxCast) * 100}%"></div></div><span class="sale-amount">${formatPrice(c.subtotal)} (${c.count}件)</span></div>`
     ).join("");
   }
 
