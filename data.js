@@ -1,6 +1,6 @@
 const MENU_DATA = {
   categories: [
-    { id: "all", name: "すべて", emoji: "✨" },
+    { id: "table", name: "卓番号", emoji: "🪑" },
     { id: "system", name: "システム", emoji: "🎀" },
     { id: "shot", name: "ショット", emoji: "🥃" },
     { id: "drink", name: "ドリンク", emoji: "🥤" },
@@ -10,6 +10,7 @@ const MENU_DATA = {
     { id: "wine", name: "ワイン", emoji: "🍷" },
     { id: "food", name: "フード", emoji: "🍫" },
     { id: "other", name: "その他", emoji: "📝" },
+    { id: "all", name: "すべて", emoji: "✨" },
   ],
   items: [
     // ===== システム =====
@@ -104,9 +105,9 @@ const MENU_DATA = {
     // ===== オリジナルシャンパン =====
     { id: 80, name: "GIFTオリジナル ホワイト", price: 15000, category: "original", emoji: "🤍" },
     { id: 81, name: "GIFTオリジナル ロゼ", price: 30000, category: "original", emoji: "🩷" },
-    { id: 82, name: "GIFTオリジナル ゴールド", price: 55000, category: "original", emoji: "💛" },
+    { id: 82, name: "GIFTオリジナル ブラック", price: 55000, category: "original", emoji: "🖤" },
     { id: 83, name: "GIFTオリジナル ゴールド (大)", price: 100000, category: "original", emoji: "👑" },
-    { id: 84, name: "エンジェル 3本セット", price: 150000, category: "original", emoji: "👼" },
+    { id: 84, name: "オリシャン 3本セット", price: 150000, category: "original", emoji: "🎁" },
 
     // ===== ワイン =====
     { id: 90, name: "紫鈴 rindo (赤)", price: 30000, category: "wine", emoji: "🍷" },

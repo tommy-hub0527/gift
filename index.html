@@ -28,26 +28,24 @@
 
     <!-- 注文画面 -->
     <main class="main-content" id="view-order">
-      <!-- 左: メニュー -->
       <section class="menu-panel">
         <div class="category-tabs" id="category-tabs"></div>
         <div class="menu-grid" id="menu-grid"></div>
       </section>
 
-      <!-- 右: カート -->
       <aside class="cart-panel">
         <div class="cart-header">
-          <h2>伝票</h2>
-          <div class="cart-header-actions">
-            <div class="cast-select">
-              <label>👑 推しキャスト</label>
-              <input type="text" id="cast-input" placeholder="キャスト名" autocomplete="off">
-            </div>
+          <div class="cart-header-top">
+            <h2>伝票</h2>
             <button class="btn-clear" id="btn-clear-cart">全消去</button>
+          </div>
+          <div class="cart-header-info">
+            <div class="table-badge" id="table-badge">卓未選択</div>
+            <div class="cast-badge" id="cast-badge"></div>
           </div>
         </div>
         <div class="cart-items" id="cart-items">
-          <div class="cart-empty">商品を選択してください</div>
+          <div class="cart-empty">卓番号を選択してください</div>
         </div>
         <div class="cart-footer">
           <div class="cart-summary">
@@ -108,8 +106,92 @@
           <h3>👑 キャスト別売上</h3>
           <div class="cast-sales" id="cast-sales"></div>
         </div>
+        <div class="summary-detail">
+          <h3>📊 流入経路</h3>
+          <div class="source-stats" id="source-stats"></div>
+        </div>
       </section>
     </main>
+
+    <!-- 卓番号 新規/リピート選択モーダル -->
+    <div class="modal-overlay hidden" id="modal-table">
+      <div class="modal modal-table">
+        <div class="modal-header">
+          <h2 id="modal-table-title">卓1</h2>
+          <button class="modal-close" id="btn-close-table">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- ステップ1: 新規/リピート -->
+          <div id="table-step1">
+            <p class="modal-label">お客様のタイプを選択してください</p>
+            <div class="table-type-btns">
+              <button class="table-type-btn" id="btn-type-new">🆕 新規</button>
+              <button class="table-type-btn" id="btn-type-repeat">🔄 リピート</button>
+            </div>
+          </div>
+          <!-- ステップ2a: 新規→流入経路 -->
+          <div id="table-step2-new" class="hidden">
+            <p class="modal-label">どこから来ましたか？</p>
+            <div class="source-btns">
+              <button class="source-btn" data-source="Google">🔍 Google</button>
+              <button class="source-btn" data-source="ポケパラ">📱 ポケパラ</button>
+              <button class="source-btn" data-source="看板">🪧 看板</button>
+              <button class="source-btn" data-source="インスタ・Tiktok">📸 インスタ・Tiktok</button>
+            </div>
+          </div>
+          <!-- ステップ2b: リピート→推しキャスト入力 -->
+          <div id="table-step2-repeat" class="hidden">
+            <p class="modal-label">推しキャスト名を入力</p>
+            <input type="text" id="table-cast-input" class="modal-text-input" placeholder="キャスト名" autocomplete="off">
+            <button class="btn-confirm-cast" id="btn-confirm-cast">決定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 特別割引モーダル -->
+    <div class="modal-overlay hidden" id="modal-discount">
+      <div class="modal modal-custom">
+        <div class="modal-header">
+          <h2>🏷️ 特別割引</h2>
+          <button class="modal-close" id="btn-close-discount">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="custom-field">
+            <label>割引金額（税抜）</label>
+            <div class="custom-price-input">
+              <span class="yen-prefix">−¥</span>
+              <input type="number" id="discount-price" placeholder="0" min="0" step="100">
+            </div>
+          </div>
+          <button class="btn-add-custom" id="btn-add-discount">割引を適用</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- その他フリー入力モーダル -->
+    <div class="modal-overlay hidden" id="modal-custom">
+      <div class="modal modal-custom">
+        <div class="modal-header">
+          <h2>📝 その他（フリー入力）</h2>
+          <button class="modal-close" id="btn-close-custom">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="custom-field">
+            <label>商品名</label>
+            <input type="text" id="custom-name" placeholder="商品名を入力" autocomplete="off">
+          </div>
+          <div class="custom-field">
+            <label>金額（税抜）</label>
+            <div class="custom-price-input">
+              <span class="yen-prefix">¥</span>
+              <input type="number" id="custom-price" placeholder="0" min="0" step="100">
+            </div>
+          </div>
+          <button class="btn-add-custom" id="btn-add-custom">伝票に追加</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 会計モーダル -->
     <div class="modal-overlay hidden" id="modal-checkout">
@@ -134,7 +216,7 @@
           <div class="cash-input" id="cash-input-section">
             <label>お預かり金額</label>
             <div class="amount-display" id="received-display">¥0</div>
-            <div class="numpad" id="numpad">
+            <div class="numpad">
               <button class="num-btn" data-val="1">1</button>
               <button class="num-btn" data-val="2">2</button>
               <button class="num-btn" data-val="3">3</button>
@@ -166,37 +248,11 @@
       </div>
     </div>
 
-    <!-- その他フリー入力モーダル -->
-    <div class="modal-overlay hidden" id="modal-custom">
-      <div class="modal modal-custom">
-        <div class="modal-header">
-          <h2>📝 その他（フリー入力）</h2>
-          <button class="modal-close" id="btn-close-custom">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="custom-field">
-            <label>商品名</label>
-            <input type="text" id="custom-name" placeholder="商品名を入力" autocomplete="off">
-          </div>
-          <div class="custom-field">
-            <label>金額（税抜）</label>
-            <div class="custom-price-input">
-              <span class="yen-prefix">¥</span>
-              <input type="number" id="custom-price" placeholder="0" min="0" step="100">
-            </div>
-          </div>
-          <button class="btn-add-custom" id="btn-add-custom">伝票に追加</button>
-        </div>
-      </div>
-    </div>
-
     <!-- モバイル用カートボタン -->
     <button class="mobile-cart-btn" id="mobile-cart-btn">
       <span class="mobile-cart-icon">🧾</span>
       <span class="mobile-cart-badge" id="mobile-cart-badge">0</span>
     </button>
-
-    <!-- モバイル用カート背景 -->
     <div class="mobile-cart-overlay hidden" id="mobile-cart-overlay"></div>
 
     <!-- レシートモーダル -->
