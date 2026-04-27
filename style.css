@@ -1213,6 +1213,11 @@ button:active {
   font-size: 11px;
 }
 
+.table-btn.table-has-session:not(.table-active) .name,
+.table-btn.table-has-session:not(.table-active) .table-info {
+  color: var(--text);
+}
+
 .table-info {
   font-size: 10px;
   color: rgba(26, 26, 26, 0.7);
@@ -2083,6 +2088,377 @@ button:active {
 
   .summary-card .card-value {
     font-size: 20px;
+  }
+}
+
+/* ============================
+   Summary Sub-tabs
+   ============================ */
+.summary-sub-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  padding: 3px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  width: fit-content;
+}
+
+.summary-sub-tab {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+.summary-sub-tab:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.summary-sub-tab.active {
+  color: var(--gold);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================
+   Daily Report
+   ============================ */
+.report-header-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.report-header-row .panel-title {
+  margin-bottom: 0;
+}
+
+.report-date-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-date-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-date-btn:hover {
+  background: var(--gold-glow);
+  color: var(--gold);
+  border-color: var(--gold-dark);
+}
+
+.report-date-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 140px;
+  text-align: center;
+}
+
+.btn-pdf-download {
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #1a1a1a;
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.btn-pdf-download:hover {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Report tables */
+.report-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.report-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold-light);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.report-table th,
+.report-table td {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.report-table th {
+  background: var(--bg);
+  color: var(--gold-light);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.report-table td {
+  color: var(--text);
+}
+
+.report-table .row-label {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-alt);
+}
+
+.report-table .row-total {
+  font-weight: 800;
+  color: var(--gold);
+  background: var(--gold-glow);
+}
+
+.report-table .amount-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-table .num-cell {
+  text-align: center;
+  min-width: 28px;
+}
+
+.report-table .name-cell {
+  text-align: left;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-table .new-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 1px 5px;
+  border-radius: 50px;
+  margin-left: 4px;
+}
+
+/* Expense input rows */
+.expense-input-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+
+.expense-input-row input[type="text"] {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.expense-input-row input[type="number"] {
+  width: 100px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  text-align: right;
+}
+
+.expense-input-row input:focus {
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+.btn-expense-add {
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--gold-glow);
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(201, 169, 110, 0.3);
+}
+
+.btn-expense-add:hover {
+  background: rgba(201, 169, 110, 0.25);
+}
+
+.btn-expense-del {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  flex-shrink: 0;
+}
+
+.btn-expense-del:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.expense-list {
+  margin-bottom: 8px;
+}
+
+.expense-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+/* Daily pay input */
+.daily-pay-section {
+  margin-top: 8px;
+}
+
+.daily-pay-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.daily-pay-row label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 60px;
+}
+
+.daily-pay-row input {
+  width: 120px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  text-align: right;
+}
+
+.daily-pay-row input:focus {
+  border-color: var(--gold-dark);
+  box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+/* Cast drink/shot summary in report */
+.report-cast-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+  .report-cast-grid {
+    grid-template-columns: 1fr;
+  }
+  .report-header-row {
+    gap: 10px;
+  }
+  .btn-pdf-download {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ============================
+   PDF Print Overrides
+   ============================ */
+@media print {
+  .report-section {
+    background: white !important;
+    border-color: #333 !important;
+    color: #000 !important;
+    break-inside: avoid;
+  }
+  .report-table th {
+    background: #eee !important;
+    color: #000 !important;
+  }
+  .report-table td {
+    color: #000 !important;
+  }
+  .report-table .row-label {
+    background: #f5f5f5 !important;
+    color: #333 !important;
+  }
+  .report-table .row-total {
+    background: #fff8e7 !important;
+    color: #8b6914 !important;
+  }
+  .report-date-nav,
+  .btn-pdf-download,
+  .summary-sub-tabs,
+  .header,
+  .expense-input-row,
+  .btn-expense-add,
+  .btn-expense-del {
+    display: none !important;
+  }
+  #daily-report-content {
+    color: #000;
   }
 }
 

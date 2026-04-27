@@ -89,13 +89,31 @@
     <!-- 売上画面 -->
     <main class="main-content hidden" id="view-summary">
       <section class="summary-panel">
-        <h2 class="panel-title">売上サマリー</h2>
-        <div class="summary-cards" id="summary-cards"></div>
-        <div class="summary-detail"><h3>カテゴリ別売上</h3><div class="category-sales" id="category-sales"></div></div>
-        <div class="summary-detail"><h3>人気メニュー TOP5</h3><div class="popular-items" id="popular-items"></div></div>
-        <div class="summary-detail"><h3>👑 キャスト別売上</h3><div class="cast-sales" id="cast-sales"></div></div>
-        <div class="summary-detail"><h3>📊 流入経路</h3><div class="source-stats" id="source-stats"></div></div>
-        <div class="summary-detail"><h3>📊 キャストショット（カウント）集計（本日）</h3><div class="shot-count-stats" id="shot-count-stats"></div></div>
+        <div class="summary-sub-tabs">
+          <button class="summary-sub-tab active" data-subtab="summary">📊 売上サマリー</button>
+          <button class="summary-sub-tab" data-subtab="daily-report">📋 日報</button>
+        </div>
+        <div id="subtab-summary">
+          <h2 class="panel-title">売上サマリー</h2>
+          <div class="summary-cards" id="summary-cards"></div>
+          <div class="summary-detail"><h3>カテゴリ別売上</h3><div class="category-sales" id="category-sales"></div></div>
+          <div class="summary-detail"><h3>人気メニュー TOP5</h3><div class="popular-items" id="popular-items"></div></div>
+          <div class="summary-detail"><h3>👑 キャスト別売上</h3><div class="cast-sales" id="cast-sales"></div></div>
+          <div class="summary-detail"><h3>📊 流入経路</h3><div class="source-stats" id="source-stats"></div></div>
+          <div class="summary-detail"><h3>📝 備考</h3><div class="remarks-stats" id="remarks-stats"></div></div>
+        </div>
+        <div id="subtab-daily-report" class="hidden">
+          <div class="report-header-row">
+            <h2 class="panel-title">日報</h2>
+            <div class="report-date-nav">
+              <button class="report-date-btn" id="report-prev-day">◀</button>
+              <span class="report-date-label" id="report-date-label"></span>
+              <button class="report-date-btn" id="report-next-day">▶</button>
+            </div>
+            <button class="btn-pdf-download" id="btn-pdf-download">📥 PDF出力</button>
+          </div>
+          <div id="daily-report-content"></div>
+        </div>
       </section>
     </main>
 

@@ -21,6 +21,7 @@ const MENU_DATA = {
     { id: 5, name: "60分延長", price: 3500, category: "system", emoji: "⏱️" },
     { id: 6, name: "推し指名", price: 2000, category: "system", emoji: "👑" },
     { id: 7, name: "場内指名", price: 1000, category: "system", emoji: "💫" },
+    { id: 8, name: "同伴", price: 2000, category: "system", emoji: "🤝" },
 
     // ===== ショット =====
     { id: 10, name: "イエガー", price: 1500, category: "shot", emoji: "🥃" },
@@ -78,8 +79,8 @@ const MENU_DATA = {
     // ===== オリジナル =====
     { id: 80, name: "GIFTオリジナル ホワイト", price: 15000, category: "original", emoji: "🤍" },
     { id: 81, name: "GIFTオリジナル ロゼ", price: 30000, category: "original", emoji: "🩷" },
-    { id: 82, name: "GIFTオリジナル ブラック", price: 55000, category: "original", emoji: "🖤" },
-    { id: 83, name: "GIFTオリジナル ゴールド (大)", price: 100000, category: "original", emoji: "👑" },
+    { id: 82, name: "GIFTオリジナル ゴールド", price: 55000, category: "original", emoji: "👑" },
+    { id: 83, name: "GIFTオリジナル ブラック", price: 100000, category: "original", emoji: "🖤" },
     { id: 84, name: "オリシャン 3本セット", price: 150000, category: "original", emoji: "🎁" },
 
     // ===== ワイン =====
@@ -93,6 +94,6 @@ const MENU_DATA = {
 
     // ===== その他 =====
     { id: 103, name: "瓶コーラ", price: 1000, category: "other", emoji: "🥤" },
-    { id: 104, name: "キャストショット（カウント）", price: 0, category: "other", emoji: "📊", isShotTracker: true },
+    { id: 105, name: "キャストショット＋（カウント）", price: 0, category: "other", emoji: "📊", isShotTracker: true },
   ],
 };

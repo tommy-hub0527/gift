@@ -306,7 +306,18 @@ function renderMenu() {
   }
 
   if (state.currentCategory === "other") {
-    c.innerHTML = `<button class="menu-item menu-item-custom" id="btn-open-custom"><span class="emoji">📝</span><span class="name">フリー入力</span><span class="price">自由金額</span></button>`;
+    const otherItems = MENU_DATA.items.filter((i) => i.category === "other");
+    let oh = otherItems
+      .map(
+        (item) =>
+          `<button class="menu-item" data-id="${item.id}"><span class="emoji">${item.emoji}</span><span class="name">${item.name}</span><span class="price">${fmt(item.price)}</span></button>`
+      )
+      .join("");
+    oh += `<button class="menu-item menu-item-custom" id="btn-open-custom"><span class="emoji">📝</span><span class="name">フリー入力</span><span class="price">自由金額</span></button>`;
+    c.innerHTML = oh;
+    c.querySelectorAll(".menu-item:not(.menu-item-custom)").forEach((el) => {
+      if (el.dataset.id) el.addEventListener("click", () => { if (!guardTable()) return; openConfirmItem(parseInt(el.dataset.id)); });
+    });
     document.getElementById("btn-open-custom").addEventListener("click", () => {
       if (!guardTable()) return;
       openCustomModal();
@@ -463,9 +474,10 @@ document.getElementById("btn-recipient-confirm").addEventListener("click", () =>
   if (!item) return;
 
   if (item.isShotTracker) {
+    const baseName = item.name.replace("（カウント）", "").trim();
     pushCartLine({
       id: item.id,
-      name: `キャストショット（カウント）【${name}】`,
+      name: `${baseName}（カウント）【${name}】`,
       price: 0,
       category: item.category,
       emoji: item.emoji,
@@ -1071,7 +1083,7 @@ function renderHistory() {
 // Summary
 // ============================
 function parseShotCountName(name) {
-  const m = String(name).match(/キャストショット（カウント）【(.+?)】/);
+  const m = String(name).match(/キャストショット(?:＋)?（カウント）【(.+?)】/);
   return m ? m[1] : null;
 }
 
@@ -1172,28 +1184,493 @@ function renderSummary() {
       .join("");
   }
 
-  const shotAgg = {};
+  const remarksAgg = {};
   todayOrders.forEach((o) => {
     o.items.forEach((i) => {
-      const castName = parseShotCountName(i.name);
-      if (castName) {
-        shotAgg[castName] = (shotAgg[castName] || 0) + i.qty;
+      const name = String(i.name);
+      const m = name.match(/キャストショット＋（カウント）【(.+?)】/);
+      if (m) {
+        remarksAgg[m[1]] = (remarksAgg[m[1]] || 0) + i.qty;
       }
     });
   });
-  const shotList = Object.entries(shotAgg).sort((a, b) => b[1] - a[1]);
-  const shotEl = document.getElementById("shot-count-stats");
-  if (shotList.length === 0) shotEl.innerHTML = '<div class="empty-state">まだデータがありません</div>';
-  else {
-    const mx = shotList[0][1] || 1;
-    shotEl.innerHTML = shotList
-      .map(
-        ([n, cnt]) =>
-          `<div class="category-sale-row"><span class="sale-label">🥃 ${escapeHtml(n)}</span><div class="sale-bar-container"><div class="sale-bar" style="width:${(cnt / mx) * 100}%"></div></div><span class="sale-amount">${cnt}杯（0円集計）</span></div>`
-      )
-      .join("");
+  const remarksList = Object.entries(remarksAgg).sort((a, b) => b[1] - a[1]);
+  const remarksEl = document.getElementById("remarks-stats");
+  if (remarksList.length === 0) {
+    remarksEl.innerHTML = '<div class="empty-state">備考なし</div>';
+  } else {
+    remarksEl.innerHTML = '<table class="remarks-table">' +
+      remarksList.map(([n, cnt]) =>
+        `<div class="category-sale-row"><span class="sale-label">🥃 ${escapeHtml(n)}</span><span class="sale-amount">${cnt}杯</span></div>`
+      ).join("") + '</table>';
   }
 }
+
+// ============================
+// Summary Sub-tabs
+// ============================
+document.querySelectorAll(".summary-sub-tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".summary-sub-tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    const v = tab.dataset.subtab;
+    document.getElementById("subtab-summary").classList.toggle("hidden", v !== "summary");
+    document.getElementById("subtab-daily-report").classList.toggle("hidden", v !== "daily-report");
+    if (v === "daily-report") renderDailyReport();
+  });
+});
+
+// ============================
+// Daily Report
+// ============================
+const EXPENSE_KEY = "gift_daily_expenses";
+const DAILY_PAY_KEY = "gift_daily_pay";
+
+let reportDate = getBusinessDateObj();
+
+function getBusinessDateObj(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  if (d.getHours() < 20) d.setDate(d.getDate() - 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function reportDateKey() {
+  return reportDate.toDateString();
+}
+
+function fmtReportDate(d) {
+  return `R${d.getFullYear() - 2018}年 ${d.getMonth() + 1}月 ${d.getDate()}日`;
+}
+
+function loadExpenses() {
+  try { return JSON.parse(localStorage.getItem(EXPENSE_KEY) || "{}"); } catch { return {}; }
+}
+function saveExpenses(obj) { localStorage.setItem(EXPENSE_KEY, JSON.stringify(obj)); }
+function getExpensesForDate(dateKey) {
+  const all = loadExpenses();
+  return all[dateKey] || [];
+}
+function setExpensesForDate(dateKey, arr) {
+  const all = loadExpenses();
+  all[dateKey] = arr;
+  saveExpenses(all);
+}
+
+function loadDailyPay() {
+  try { return JSON.parse(localStorage.getItem(DAILY_PAY_KEY) || "{}"); } catch { return {}; }
+}
+function saveDailyPay(obj) { localStorage.setItem(DAILY_PAY_KEY, JSON.stringify(obj)); }
+function getDailyPayForDate(dateKey) {
+  const all = loadDailyPay();
+  return all[dateKey] || { dailyPay: 0, tainyuSalary: 0 };
+}
+function setDailyPayForDate(dateKey, data) {
+  const all = loadDailyPay();
+  all[dateKey] = data;
+  saveDailyPay(all);
+}
+
+document.getElementById("report-prev-day").addEventListener("click", () => {
+  reportDate.setDate(reportDate.getDate() - 1);
+  renderDailyReport();
+});
+document.getElementById("report-next-day").addEventListener("click", () => {
+  reportDate.setDate(reportDate.getDate() + 1);
+  renderDailyReport();
+});
+
+function getOrdersForReportDate() {
+  const key = reportDate.toDateString();
+  return state.orders.filter((o) => getBusinessDate(o.timestamp) === key);
+}
+
+function renderDailyReport() {
+  const dateKey = reportDateKey();
+  document.getElementById("report-date-label").textContent = fmtReportDate(reportDate);
+  const orders = getOrdersForReportDate();
+  const expenses = getExpensesForDate(dateKey);
+  const payData = getDailyPayForDate(dateKey);
+  const el = document.getElementById("daily-report-content");
+
+  const cashOrders = orders.filter((o) => o.method === "cash");
+  const cardOrders = orders.filter((o) => o.method === "card");
+  const qrOrders = orders.filter((o) => o.method === "qr");
+  const cashTotal = cashOrders.reduce((s, o) => s + o.total, 0);
+  const cardTotal = cardOrders.reduce((s, o) => s + o.total, 0);
+  const qrTotal = qrOrders.reduce((s, o) => s + o.total, 0);
+  const grandTotal = orders.reduce((s, o) => s + o.total, 0);
+  const expenseTotal = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const dailyPay = payData.dailyPay || 0;
+  const tainyuSalary = payData.tainyuSalary || 0;
+  const cashNet = cashTotal - expenseTotal - dailyPay - tainyuSalary;
+
+  // Customer rows (max 15)
+  let custRows = "";
+  for (let i = 0; i < 15; i++) {
+    const o = orders[i];
+    if (o) {
+      const cin = o.checkinTime ? fmtTime(new Date(o.checkinTime)) : "";
+      const cout = o.checkoutTime ? fmtTime(new Date(o.checkoutTime)) : "";
+      const guests = o.guestCount || "";
+      const orderNum = `#${o.id.toString().padStart(4, "0")}`;
+      const isNew = o.customerType === "new";
+      const newBadge = isNew ? `<span class="new-badge">${o.source || "新規"}</span>` : "";
+      custRows += `<tr>
+        <td class="num-cell">${i + 1}</td>
+        <td class="num-cell">${guests}</td>
+        <td>${cin}</td>
+        <td>${cout}</td>
+        <td class="name-cell">${orderNum}${newBadge}</td>
+        <td class="amount-cell">${fmt(o.total)}</td>
+      </tr>`;
+    } else {
+      custRows += `<tr><td class="num-cell">${i + 1}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
+    }
+  }
+
+  // Card detail rows
+  let cardRows = "";
+  cardOrders.forEach((o) => {
+    const orderNum = `#${o.id.toString().padStart(4, "0")}`;
+    cardRows += `<tr><td class="name-cell">${orderNum}</td><td class="amount-cell">${fmt(o.total)}</td></tr>`;
+  });
+  if (cardRows === "") cardRows = `<tr><td colspan="2" style="color:var(--text-muted);font-size:11px;">なし</td></tr>`;
+
+  // QR detail rows
+  let qrRows = "";
+  qrOrders.forEach((o) => {
+    const orderNum = `#${o.id.toString().padStart(4, "0")}`;
+    qrRows += `<tr><td class="name-cell">${orderNum}</td><td class="amount-cell">${fmt(o.total)}</td></tr>`;
+  });
+
+  // Expense rows
+  let expenseRows = "";
+  expenses.forEach((e, i) => {
+    expenseRows += `<div class="expense-input-row" data-eidx="${i}">
+      <input type="text" value="${escapeAttr(e.name || "")}" data-field="name" placeholder="項目名">
+      <input type="number" value="${e.amount || ""}" data-field="amount" placeholder="金額" min="0">
+      <button class="btn-expense-del" data-eidx="${i}">×</button>
+    </div>`;
+  });
+
+  // Cast drink & shot aggregation
+  const castDrinkAgg = {};
+  const castShotAgg = {};
+  orders.forEach((o) => {
+    o.items.forEach((item) => {
+      const name = String(item.name);
+      const shotCast = parseShotCountName(name);
+      if (shotCast) {
+        castShotAgg[shotCast] = (castShotAgg[shotCast] || 0) + item.qty;
+        return;
+      }
+      const drinkMatch = name.match(/^(?:キャストドリンク|キャストショット)（(.+?)）$/);
+      if (drinkMatch) {
+        const castName = drinkMatch[1];
+        const key = name.startsWith("キャストショット") ? "shot" : "drink";
+        if (!castDrinkAgg[castName]) castDrinkAgg[castName] = { drink: 0, shot: 0 };
+        castDrinkAgg[castName][key] += item.qty;
+      }
+    });
+  });
+
+  let castDrinkRows = "";
+  const cdNames = Object.keys(castDrinkAgg).sort();
+  if (cdNames.length === 0) {
+    castDrinkRows = `<tr><td colspan="3" style="color:var(--text-muted);font-size:11px;">なし</td></tr>`;
+  } else {
+    cdNames.forEach((n) => {
+      const d = castDrinkAgg[n];
+      castDrinkRows += `<tr><td class="name-cell">${escapeHtml(n)}</td><td class="num-cell">${d.drink}杯</td><td class="num-cell">${d.shot}杯</td></tr>`;
+    });
+  }
+
+  // Remarks: キャストショット＋（カウント）
+  const remarksPlus = {};
+  orders.forEach((o) => {
+    o.items.forEach((item) => {
+      const m = String(item.name).match(/キャストショット＋（カウント）【(.+?)】/);
+      if (m) remarksPlus[m[1]] = (remarksPlus[m[1]] || 0) + item.qty;
+    });
+  });
+  const remarksPlusList = Object.entries(remarksPlus).sort((a, b) => b[1] - a[1]);
+  let remarksHtml = "";
+  if (remarksPlusList.length === 0) {
+    remarksHtml = `<p style="color:var(--text-muted);font-size:12px;">なし</p>`;
+  } else {
+    remarksHtml = `<table class="report-table"><thead><tr><th>キャスト名</th><th>杯数</th></tr></thead><tbody>` +
+      remarksPlusList.map(([n, cnt]) => `<tr><td class="name-cell">🥃 ${escapeHtml(n)}</td><td class="num-cell">${cnt}杯</td></tr>`).join("") +
+      `</tbody></table>`;
+  }
+
+  // New customer source
+  const newOrders = orders.filter((o) => o.customerType === "new");
+  let sourceRows = "";
+  if (newOrders.length === 0) {
+    sourceRows = `<tr><td colspan="3" style="color:var(--text-muted);font-size:11px;">なし</td></tr>`;
+  } else {
+    newOrders.forEach((o) => {
+      const orderNum = `#${o.id.toString().padStart(4, "0")}`;
+      sourceRows += `<tr><td class="name-cell">${orderNum}</td><td>${escapeHtml(o.source || "不明")}</td><td class="num-cell">${o.guestCount || ""}名</td></tr>`;
+    });
+  }
+
+  // Monthly total
+  const monthKey = `${reportDate.getFullYear()}-${pz(reportDate.getMonth() + 1)}`;
+  const monthOrders = state.orders.filter((o) => getBusinessMonth(o.timestamp) === monthKey);
+  const monthTotal = monthOrders.reduce((s, o) => s + o.total, 0);
+
+  el.innerHTML = `
+    <div class="report-grid">
+      <div>
+        <!-- Customer table -->
+        <div class="report-section">
+          <h3>来店一覧</h3>
+          <table class="report-table">
+            <thead><tr><th></th><th>客数</th><th>来店時間</th><th>退店時間</th><th>お客様名</th><th>会計金</th></tr></thead>
+            <tbody>${custRows}</tbody>
+            <tfoot>
+              <tr class="row-total"><td colspan="5">計</td><td class="amount-cell">${fmt(grandTotal)}</td></tr>
+              <tr class="row-total"><td colspan="5">月間売上金</td><td class="amount-cell">${fmt(monthTotal)}</td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Cast drink/shot summary -->
+        <div class="report-cast-grid">
+          <div class="report-section">
+            <h3>🍹 キャストドリンク/ショット</h3>
+            <table class="report-table">
+              <thead><tr><th>キャスト名</th><th>ドリンク</th><th>ショット</th></tr></thead>
+              <tbody>${castDrinkRows}</tbody>
+            </table>
+          </div>
+          <div class="report-section">
+            <h3>📝 備考</h3>
+            ${remarksHtml}
+          </div>
+        </div>
+
+        <!-- New customer sources -->
+        <div class="report-section">
+          <h3>🆕 新規流入経路</h3>
+          <table class="report-table">
+            <thead><tr><th>伝票</th><th>流入経路</th><th>人数</th></tr></thead>
+            <tbody>${sourceRows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <!-- Credit card -->
+        <div class="report-section">
+          <h3>💳 クレジットカード</h3>
+          <table class="report-table">
+            <thead><tr><th>伝票</th><th>金額</th></tr></thead>
+            <tbody>${cardRows}</tbody>
+            <tfoot><tr class="row-total"><td>クレジットカード計</td><td class="amount-cell">${fmt(cardTotal)}</td></tr></tfoot>
+          </table>
+        </div>
+
+        ${qrOrders.length > 0 ? `
+        <div class="report-section">
+          <h3>📱 QR決済</h3>
+          <table class="report-table">
+            <thead><tr><th>伝票</th><th>金額</th></tr></thead>
+            <tbody>${qrRows}</tbody>
+            <tfoot><tr class="row-total"><td>QR決済計</td><td class="amount-cell">${fmt(qrTotal)}</td></tr></tfoot>
+          </table>
+        </div>` : ""}
+
+        <!-- Expenses -->
+        <div class="report-section">
+          <h3>💰 経費内訳</h3>
+          <div class="expense-list" id="expense-list">${expenseRows}</div>
+          <div class="expense-input-row">
+            <input type="text" id="new-expense-name" placeholder="項目名（例: アイスマート）">
+            <input type="number" id="new-expense-amount" placeholder="金額" min="0">
+            <button class="btn-expense-add" id="btn-add-expense">＋</button>
+          </div>
+          <div class="expense-total-row"><span>経費計</span><span id="expense-total-display">${fmt(expenseTotal)}</span></div>
+        </div>
+
+        <!-- Daily pay -->
+        <div class="report-section">
+          <h3>📤 日払い・体入</h3>
+          <div class="daily-pay-row">
+            <label>日払い</label>
+            <input type="number" id="report-daily-pay" value="${dailyPay || ""}" placeholder="0" min="0">
+          </div>
+          <div class="daily-pay-row">
+            <label>体入給与</label>
+            <input type="number" id="report-tainyu-salary" value="${tainyuSalary || ""}" placeholder="0" min="0">
+          </div>
+        </div>
+
+        <!-- Cash summary -->
+        <div class="report-section">
+          <h3>💴 現金内訳</h3>
+          <table class="report-table">
+            <tbody>
+              <tr><td class="row-label">現金売上</td><td class="amount-cell">${fmt(cashTotal)}</td></tr>
+              <tr><td class="row-label">経費</td><td class="amount-cell">${fmt(expenseTotal)}</td></tr>
+              <tr><td class="row-label">日払い</td><td class="amount-cell">${fmt(dailyPay)}</td></tr>
+              <tr><td class="row-label">体入給与</td><td class="amount-cell">${fmt(tainyuSalary)}</td></tr>
+              <tr class="row-total"><td>現金計</td><td class="amount-cell">${fmt(cashNet)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Grand summary -->
+        <div class="report-section">
+          <h3>📊 売上集計概要</h3>
+          <table class="report-table">
+            <tbody>
+              <tr><td class="row-label">現金</td><td class="amount-cell">${fmt(cashTotal)}</td></tr>
+              <tr><td class="row-label">クレジットカード</td><td class="amount-cell">${fmt(cardTotal)}</td></tr>
+              ${qrTotal > 0 ? `<tr><td class="row-label">QR決済</td><td class="amount-cell">${fmt(qrTotal)}</td></tr>` : ""}
+              <tr class="row-total"><td>総売上</td><td class="amount-cell">${fmt(grandTotal)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  bindExpenseEvents();
+  bindDailyPayEvents();
+}
+
+function bindExpenseEvents() {
+  const dateKey = reportDateKey();
+  document.getElementById("btn-add-expense")?.addEventListener("click", () => {
+    const name = document.getElementById("new-expense-name").value.trim();
+    const amount = parseInt(document.getElementById("new-expense-amount").value, 10) || 0;
+    if (!name && amount <= 0) return;
+    const expenses = getExpensesForDate(dateKey);
+    expenses.push({ name: name || "経費", amount });
+    setExpensesForDate(dateKey, expenses);
+    renderDailyReport();
+  });
+
+  document.querySelectorAll("#expense-list .btn-expense-del").forEach((b) => {
+    b.addEventListener("click", () => {
+      const idx = parseInt(b.dataset.eidx, 10);
+      const expenses = getExpensesForDate(dateKey);
+      expenses.splice(idx, 1);
+      setExpensesForDate(dateKey, expenses);
+      renderDailyReport();
+    });
+  });
+
+  document.querySelectorAll("#expense-list .expense-input-row input").forEach((inp) => {
+    inp.addEventListener("change", () => {
+      const row = inp.closest(".expense-input-row");
+      const idx = parseInt(row.dataset.eidx, 10);
+      const expenses = getExpensesForDate(dateKey);
+      if (expenses[idx]) {
+        if (inp.dataset.field === "name") expenses[idx].name = inp.value.trim();
+        if (inp.dataset.field === "amount") expenses[idx].amount = parseInt(inp.value, 10) || 0;
+        setExpensesForDate(dateKey, expenses);
+        const total = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+        document.getElementById("expense-total-display").textContent = fmt(total);
+      }
+    });
+  });
+}
+
+function bindDailyPayEvents() {
+  const dateKey = reportDateKey();
+  const dpEl = document.getElementById("report-daily-pay");
+  const tsEl = document.getElementById("report-tainyu-salary");
+
+  const save = () => {
+    setDailyPayForDate(dateKey, {
+      dailyPay: parseInt(dpEl?.value, 10) || 0,
+      tainyuSalary: parseInt(tsEl?.value, 10) || 0,
+    });
+  };
+
+  dpEl?.addEventListener("change", save);
+  tsEl?.addEventListener("change", save);
+}
+
+// ============================
+// PDF Download
+// ============================
+document.getElementById("btn-pdf-download").addEventListener("click", () => {
+  const content = document.getElementById("daily-report-content");
+  const dateLabel = document.getElementById("report-date-label").textContent;
+
+  const printWin = window.open("", "_blank");
+  if (!printWin) {
+    alert("ポップアップがブロックされました。許可してください。");
+    return;
+  }
+
+  const fontsLink = Array.from(document.querySelectorAll("link[href*='fonts.googleapis']"))
+    .map((l) => l.outerHTML).join("");
+
+  let cssText = "";
+  try {
+    for (const sheet of document.styleSheets) {
+      try {
+        for (const rule of sheet.cssRules) cssText += rule.cssText + "\n";
+      } catch { /* cross-origin */ }
+    }
+  } catch { /* ignore */ }
+
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日報 - ${escapeHtml(dateLabel)}</title>
+${fontsLink}
+<style>
+${cssText}
+body { background: #fff !important; color: #000 !important; padding: 20px; overflow: auto; height: auto; }
+.hidden { display: none !important; }
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.report-cast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.report-section { background: #fff !important; border: 1px solid #999 !important; border-radius: 8px; padding: 14px; margin-bottom: 14px; break-inside: avoid; }
+.report-section h3 { font-size: 14px; font-weight: 700; color: #333 !important; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #ccc !important; }
+.report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.report-table th, .report-table td { padding: 5px 8px; border: 1px solid #bbb; text-align: center; white-space: nowrap; }
+.report-table th { background: #eee !important; color: #000 !important; font-weight: 700; font-size: 11px; }
+.report-table td { color: #000 !important; }
+.report-table .row-label { text-align: left; font-weight: 600; color: #333 !important; background: #f5f5f5 !important; }
+.report-table .row-total { font-weight: 800; color: #8b6914 !important; background: #fff8e7 !important; }
+.report-table .row-total td { border-color: #999 !important; }
+.report-table .amount-cell { text-align: right; font-variant-numeric: tabular-nums; }
+.report-table .num-cell { text-align: center; }
+.report-table .name-cell { text-align: left; }
+.new-badge { display: inline-block; font-size: 9px; font-weight: 700; color: #16a34a !important; background: #dcfce7 !important; padding: 1px 5px; border-radius: 50px; margin-left: 4px; }
+.expense-total-row { display: flex; justify-content: space-between; padding: 6px 8px; background: #f5f5f5 !important; border-radius: 6px; font-size: 13px; font-weight: 700; color: #333 !important; }
+.expense-input-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+.expense-input-row input { padding: 4px 6px; border: 1px solid #bbb; border-radius: 4px; background: #fff; color: #000; font-size: 12px; }
+.expense-input-row input[type="text"] { flex: 1; }
+.expense-input-row input[type="number"] { width: 100px; text-align: right; }
+.btn-expense-del, .btn-expense-add { display: none !important; }
+.daily-pay-section { margin-top: 8px; }
+.daily-pay-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.daily-pay-row label { font-size: 12px; font-weight: 600; color: #333 !important; min-width: 60px; }
+.daily-pay-row input { width: 120px; padding: 4px 6px; border: 1px solid #bbb; border-radius: 4px; background: #fff; color: #000; font-size: 12px; text-align: right; }
+.report-print-header { text-align: center; margin-bottom: 20px; }
+.report-print-header h1 { font-family: "Cormorant Garamond", serif; font-size: 28px; letter-spacing: 4px; margin-bottom: 4px; color: #000; }
+.report-print-header p { font-size: 16px; color: #555; }
+.report-notes-section textarea { width: 100%; border: 1px solid #bbb; border-radius: 4px; padding: 8px; font-size: 12px; color: #000; background: #fff; resize: vertical; }
+@media print {
+  body { padding: 0; margin: 10px; }
+  .expense-input-row:last-child:not([data-eidx]) { display: none !important; }
+}
+</style>
+</head><body>
+<div class="report-print-header"><h1>Gift</h1><p>日報 ─ ${escapeHtml(dateLabel)}</p></div>
+${content.innerHTML}
+</body></html>`);
+  printWin.document.close();
+  printWin.onload = () => setTimeout(() => printWin.print(), 300);
+});
 
 // ============================
 // Mobile Cart
