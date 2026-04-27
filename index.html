@@ -17,6 +17,7 @@
         <button class="nav-btn active" data-view="order">注文</button>
         <button class="nav-btn" data-view="history">履歴</button>
         <button class="nav-btn" data-view="summary">売上</button>
+        <button class="nav-btn" data-view="cast">キャスト</button>
       </nav>
       <div class="header-right"><span class="clock" id="clock"></span></div>
     </header>
@@ -72,6 +73,19 @@
       </section>
     </main>
 
+    <!-- キャスト管理画面 -->
+    <main class="main-content hidden" id="view-cast">
+      <section class="cast-panel">
+        <h2 class="panel-title">キャスト登録</h2>
+        <p class="cast-panel-desc">登録した名前は、リピート時の推し選択・キャストドリンク等の「誰が」選択に表示されます。</p>
+        <div class="cast-add-row">
+          <input type="text" id="cast-new-name" class="cast-add-input" placeholder="キャスト名を入力" autocomplete="off">
+          <button class="btn-cast-add" id="btn-cast-add">追加</button>
+        </div>
+        <div class="cast-list" id="cast-list"></div>
+      </section>
+    </main>
+
     <!-- 売上画面 -->
     <main class="main-content hidden" id="view-summary">
       <section class="summary-panel">
@@ -81,6 +95,7 @@
         <div class="summary-detail"><h3>人気メニュー TOP5</h3><div class="popular-items" id="popular-items"></div></div>
         <div class="summary-detail"><h3>👑 キャスト別売上</h3><div class="cast-sales" id="cast-sales"></div></div>
         <div class="summary-detail"><h3>📊 流入経路</h3><div class="source-stats" id="source-stats"></div></div>
+        <div class="summary-detail"><h3>📊 キャストショット（カウント）集計（本日）</h3><div class="shot-count-stats" id="shot-count-stats"></div></div>
       </section>
     </main>
 
@@ -92,6 +107,13 @@
           <button class="modal-close" id="btn-close-table">&times;</button>
         </div>
         <div class="modal-body">
+          <div id="table-step0-resume" class="hidden">
+            <p class="modal-label">この卓に進行中の伝票があります</p>
+            <div class="table-type-btns">
+              <button class="table-type-btn" id="btn-resume-session">📋 伝票を開く</button>
+              <button class="table-type-btn" id="btn-new-session">🆕 新規チェックイン</button>
+            </div>
+          </div>
           <div id="table-step1">
             <p class="modal-label">お客様のタイプを選択</p>
             <div class="table-type-btns">
@@ -111,10 +133,13 @@
             </div>
           </div>
           <div id="table-step2-repeat" class="hidden">
-            <p class="modal-label">推しキャスト名を入力</p>
-            <input type="text" id="table-cast-input" class="modal-text-input" placeholder="キャスト名" autocomplete="off">
+            <p class="modal-label">推しキャストを選択（最大2名）</p>
+            <div class="cast-selected-chips" id="cast-selected-chips"></div>
+            <div class="cast-picker-list" id="cast-picker-list"></div>
+            <input type="text" id="table-cast-input" class="modal-text-input" placeholder="または手入力で追加" autocomplete="off">
             <div class="repeat-btns">
-              <button class="btn-confirm-cast" id="btn-confirm-cast">決定</button>
+              <button class="btn-confirm-cast" id="btn-confirm-cast">次へ（人数）</button>
+              <button class="btn-add-second-cast" id="btn-add-second-cast" type="button">＋ 推しキャスト追加（2人目）</button>
               <button class="btn-free-repeat" id="btn-free-repeat">フリー（指名なし）</button>
             </div>
           </div>
@@ -122,6 +147,22 @@
             <p class="modal-label">人数を選択</p>
             <div class="guest-select-btns" id="guest-select-btns"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 受取キャスト選択モーダル -->
+    <div class="modal-overlay hidden" id="modal-recipient">
+      <div class="modal modal-table">
+        <div class="modal-header">
+          <h2 id="recipient-modal-title">誰が？</h2>
+          <button class="modal-close" id="btn-close-recipient">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-label">受け取ったキャストを選択</p>
+          <div class="cast-picker-list" id="recipient-cast-list"></div>
+          <input type="text" id="recipient-manual" class="modal-text-input" placeholder="または名前を手入力" autocomplete="off">
+          <button class="btn-confirm-cast" id="btn-recipient-confirm">確定</button>
         </div>
       </div>
     </div>
