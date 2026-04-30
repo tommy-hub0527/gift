@@ -37,6 +37,7 @@ const state = {
   customerType: null,
   source: null,
   catchName: null,
+  catchNames: [],
   cast: null,
   castsArr: [],
   guestCount: 0,
@@ -45,6 +46,7 @@ const state = {
   pendingType: null,
   pendingSource: null,
   pendingCatchName: null,
+  pendingCatchNames: [],
   pendingRepeatCasts: [],
   confirmItem: null,
   confirmQty: 1,
@@ -107,6 +109,7 @@ function snapshotSession() {
     customerType: state.customerType,
     source: state.source,
     catchName: state.catchName,
+    catchNames: [...state.catchNames],
     cast: state.cast,
     castsArr: [...state.castsArr],
     guestCount: state.guestCount,
@@ -120,6 +123,7 @@ function applySession(s) {
   state.customerType = s.customerType || null;
   state.source = s.source || null;
   state.catchName = s.catchName || null;
+  state.catchNames = Array.isArray(s.catchNames) ? [...s.catchNames] : (s.catchName ? [s.catchName] : []);
   state.cast = s.cast || null;
   state.castsArr = Array.isArray(s.castsArr) ? [...s.castsArr] : (s.cast ? s.cast.split("・") : []);
   state.guestCount = s.guestCount || 0;
@@ -618,6 +622,12 @@ function openCatchStep() {
   hideAllTableSteps();
   document.getElementById("table-step-catch").classList.remove("hidden");
   document.getElementById("catch-manual-input").value = "";
+  state.pendingCatchNames = [];
+  renderCatchPicker();
+  renderCatchChips();
+}
+
+function renderCatchPicker() {
   const list = loadCastList();
   const el = document.getElementById("catch-cast-list");
   if (list.length === 0) {
@@ -626,21 +636,47 @@ function openCatchStep() {
     el.innerHTML = list.map((n) => `<button type="button" class="cast-pick-btn" data-catch="${escapeAttr(n)}">${escapeHtml(n)}</button>`).join("");
     el.querySelectorAll("[data-catch]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        document.getElementById("catch-manual-input").value = btn.dataset.catch;
+        const name = btn.dataset.catch;
+        if (state.pendingCatchNames.length >= 3) { alert("最大3名までです"); return; }
+        if (state.pendingCatchNames.includes(name)) return;
+        state.pendingCatchNames.push(name);
+        renderCatchChips();
       });
     });
   }
 }
 
+function renderCatchChips() {
+  const el = document.getElementById("catch-selected-chips");
+  if (state.pendingCatchNames.length === 0) {
+    el.innerHTML = '<span class="modal-hint">名前をタップで追加（最大3名）</span>';
+    return;
+  }
+  el.innerHTML = state.pendingCatchNames
+    .map((n, i) => `<span class="cast-chip">${escapeHtml(n)}<button type="button" class="cast-chip-x" data-cidx="${i}">×</button></span>`)
+    .join("");
+  el.querySelectorAll(".cast-chip-x").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.pendingCatchNames.splice(parseInt(b.dataset.cidx, 10), 1);
+      renderCatchChips();
+    });
+  });
+}
+
 document.getElementById("btn-catch-confirm").addEventListener("click", () => {
-  const name = document.getElementById("catch-manual-input").value.trim();
-  if (!name) { alert("名前を選択または入力してください"); return; }
-  state.pendingCatchName = name;
+  const manual = document.getElementById("catch-manual-input").value.trim();
+  if (manual && state.pendingCatchNames.length < 3 && !state.pendingCatchNames.includes(manual)) {
+    state.pendingCatchNames.push(manual);
+    document.getElementById("catch-manual-input").value = "";
+  }
+  if (state.pendingCatchNames.length === 0) { alert("名前を1名以上選択してください"); return; }
+  state.pendingCatchName = state.pendingCatchNames.join("・");
   goToGuestStep();
 });
 
 document.getElementById("btn-catch-skip").addEventListener("click", () => {
   state.pendingCatchName = null;
+  state.pendingCatchNames = [];
   goToGuestStep();
 });
 
@@ -729,6 +765,7 @@ function finishCheckin(guests) {
     state.customerType = "new";
     state.source = state.pendingSource;
     state.catchName = state.pendingCatchName || null;
+    state.catchNames = [...state.pendingCatchNames];
     state.cast = null;
     state.castsArr = [];
     state.checkinTime = new Date().toISOString();
@@ -737,6 +774,7 @@ function finishCheckin(guests) {
     state.customerType = "repeat";
     state.source = null;
     state.catchName = null;
+    state.catchNames = [];
     state.castsArr = [...state.pendingRepeatCasts];
     state.cast = state.castsArr.length ? state.castsArr.join("・") : null;
     state.checkinTime = new Date().toISOString();
@@ -852,6 +890,7 @@ function clearCart() {
   state.customerType = null;
   state.source = null;
   state.catchName = null;
+  state.catchNames = [];
   state.cast = null;
   state.castsArr = [];
   state.guestCount = 0;
@@ -925,7 +964,8 @@ function updateTableBadge() {
     tb.classList.add("active");
     let info = state.customerType === "new" ? "🆕 新規" : "🔄 リピート";
     if (state.source) info += ` (${state.source})`;
-    if (state.catchName) info += ` 🤝${state.catchName}`;
+    if (state.catchNames && state.catchNames.length) info += ` 🤝${state.catchNames.join("・")}`;
+    else if (state.catchName) info += ` 🤝${state.catchName}`;
     if (state.cast) info = `👑 ${state.cast}`;
     if (state.checkinTime) {
       const t = new Date(state.checkinTime);
@@ -1040,6 +1080,7 @@ document.getElementById("btn-confirm-payment").addEventListener("click", () => {
     customerType: state.customerType,
     source: state.source,
     catchName: state.catchName,
+    catchNames: [...state.catchNames],
     cast: state.cast,
     castsArr: [...state.castsArr],
     guestCount: state.guestCount,
@@ -1056,14 +1097,18 @@ document.getElementById("btn-confirm-payment").addEventListener("click", () => {
 // ============================
 // Receipt
 // ============================
-function showReceipt(order) {
+let receiptIsFromHistory = false;
+
+function showReceipt(order, fromHistory) {
+  receiptIsFromHistory = !!fromHistory;
   const itemsH = order.items.map((i) => `<div class="receipt-item"><span>${escapeHtml(i.name)} x${i.qty}</span><span>${fmt(i.price * i.qty)}</span></div>`).join("");
   const scH = order.scEnabled ? `<div class="receipt-item"><span>SC (15%)</span><span>${fmt(order.sc)}</span></div>` : "";
   const cfH = order.cardFee > 0 ? `<div class="receipt-item"><span>カード手数料 (8%)</span><span>${fmt(order.cardFee)}</span></div>` : "";
   let infoH = `<div class="receipt-cast">🪑 卓${order.tableNumber} ｜ ${order.guestCount}名`;
   if (order.customerType === "new") {
     infoH += ` ｜ 🆕 新規 (${order.source})`;
-    if (order.catchName) infoH += ` 🤝${escapeHtml(order.catchName)}`;
+    const catches = order.catchNames || (order.catchName ? [order.catchName] : []);
+    if (catches.length) infoH += ` 🤝${catches.map(n => escapeHtml(n)).join("・")}`;
   }
   if (order.cast) infoH += ` ｜ 👑 ${escapeHtml(order.cast)}`;
   const cin = order.checkinTime ? fmtDT(order.checkinTime) : "";
@@ -1091,14 +1136,19 @@ function showReceipt(order) {
 }
 
 function afterReceiptClose() {
-  if (state.tableNumber) clearSessionForTable(state.tableNumber);
   document.getElementById("modal-receipt").classList.add("hidden");
   unlockScroll();
+  if (receiptIsFromHistory) {
+    receiptIsFromHistory = false;
+    return;
+  }
+  if (state.tableNumber) clearSessionForTable(state.tableNumber);
   state.cart = [];
   state.tableNumber = null;
   state.customerType = null;
   state.source = null;
   state.catchName = null;
+  state.catchNames = [];
   state.cast = null;
   state.castsArr = [];
   state.guestCount = 0;
@@ -1135,7 +1185,7 @@ function renderHistory() {
       const cin = o.checkinTime ? fmtDT(o.checkinTime) : "";
       const cout = o.checkoutTime ? fmtDT(o.checkoutTime) : "";
       const timeStr = cin && cout ? `⏰ 入店 ${cin} → 退店 ${cout}` : fmtDT(o.timestamp);
-      return `<div class="history-item">
+      return `<div class="history-item" data-view-order="${o.id}">
       <span class="order-num">#${o.id.toString().padStart(4, "0")}</span>
       <div class="order-detail">
         <div class="order-badges">${badges}</div>
@@ -1149,8 +1199,18 @@ function renderHistory() {
     })
     .join("");
 
+  c.querySelectorAll(".history-item").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      if (e.target.closest(".btn-delete-order")) return;
+      const id = parseInt(el.dataset.viewOrder, 10);
+      const order = state.orders.find((o) => o.id === id);
+      if (order) showReceipt(order, true);
+    });
+  });
+
   c.querySelectorAll(".btn-delete-order").forEach((b) => {
-    b.addEventListener("click", () => {
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
       const id = parseInt(b.dataset.orderId, 10);
       if (confirm(`注文 #${id.toString().padStart(4, "0")} を削除しますか？`)) {
         state.orders = state.orders.filter((o) => o.id !== id);
@@ -1398,7 +1458,8 @@ function renderDailyReport() {
       const orderNum = `#${o.id.toString().padStart(4, "0")}`;
       const isNew = o.customerType === "new";
       const newBadge = isNew ? `<span class="new-badge">${o.source || "新規"}</span>` : "";
-      const catchBadge = o.catchName ? `<span class="catch-badge">🤝${escapeHtml(o.catchName)}</span>` : "";
+      const catches = o.catchNames || (o.catchName ? [o.catchName] : []);
+      const catchBadge = catches.length ? `<span class="catch-badge">🤝${catches.map(n => escapeHtml(n)).join("・")}</span>` : "";
       custRows += `<tr>
         <td class="num-cell">${i + 1}</td>
         <td class="num-cell">${guests}</td>
@@ -1495,7 +1556,8 @@ function renderDailyReport() {
   } else {
     newOrders.forEach((o) => {
       const orderNum = `#${o.id.toString().padStart(4, "0")}`;
-      const catchInfo = o.catchName ? escapeHtml(o.catchName) : "";
+      const catchArr = o.catchNames || (o.catchName ? [o.catchName] : []);
+      const catchInfo = catchArr.length ? catchArr.map(n => escapeHtml(n)).join("・") : "";
       sourceRows += `<tr><td class="name-cell">${orderNum}</td><td>${escapeHtml(o.source || "不明")}</td><td class="name-cell">${catchInfo}</td><td class="num-cell">${o.guestCount || ""}名</td></tr>`;
     });
   }

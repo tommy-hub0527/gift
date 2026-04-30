@@ -971,6 +971,13 @@ button:active {
   margin-bottom: 8px;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.history-item:hover {
+  border-color: var(--gold-dark);
+  background: var(--surface-hover);
 }
 
 .history-item .order-num {
