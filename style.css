@@ -2277,6 +2277,17 @@ button:active {
   margin-left: 4px;
 }
 
+.report-table .catch-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 1px 5px;
+  border-radius: 50px;
+  margin-left: 4px;
+}
+
 /* Expense input rows */
 .expense-input-row {
   display: flex;
@@ -2287,27 +2298,29 @@ button:active {
 
 .expense-input-row input[type="text"] {
   flex: 1;
-  padding: 6px 8px;
+  padding: 10px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: 16px;
   font-family: inherit;
   outline: none;
+  min-height: 44px;
 }
 
 .expense-input-row input[type="number"] {
-  width: 100px;
-  padding: 6px 8px;
+  width: 110px;
+  padding: 10px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: 16px;
   font-family: inherit;
   outline: none;
   text-align: right;
+  min-height: 44px;
 }
 
 .expense-input-row input:focus {
@@ -2316,13 +2329,15 @@ button:active {
 }
 
 .btn-expense-add {
-  padding: 6px 10px;
+  padding: 10px 14px;
   border-radius: var(--radius);
   background: var(--gold-glow);
   color: var(--gold);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
   border: 1px solid rgba(201, 169, 110, 0.3);
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .btn-expense-add:hover {
@@ -2330,12 +2345,12 @@ button:active {
 }
 
 .btn-expense-del {
-  width: 24px;
-  height: 24px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--danger-bg);
   color: var(--danger);
-  font-size: 12px;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2382,16 +2397,17 @@ button:active {
 }
 
 .daily-pay-row input {
-  width: 120px;
-  padding: 6px 8px;
+  width: 140px;
+  padding: 10px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: 16px;
   font-family: inherit;
   outline: none;
   text-align: right;
+  min-height: 44px;
 }
 
 .daily-pay-row input:focus {

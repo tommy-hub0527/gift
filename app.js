@@ -36,6 +36,7 @@ const state = {
   tableNumber: null,
   customerType: null,
   source: null,
+  catchName: null,
   cast: null,
   castsArr: [],
   guestCount: 0,
@@ -43,6 +44,7 @@ const state = {
   pendingTableNumber: null,
   pendingType: null,
   pendingSource: null,
+  pendingCatchName: null,
   pendingRepeatCasts: [],
   confirmItem: null,
   confirmQty: 1,
@@ -58,12 +60,16 @@ const fmtDT = (s) => { const d = new Date(s); return `${d.getMonth() + 1}/${d.ge
 function getCartSubtotal() {
   return state.cart.reduce((s, i) => s + i.price * i.qty, 0);
 }
+function getTaxableSubtotal() {
+  return state.cart.reduce((s, i) => s + (i.isTaxFree ? 0 : i.price * i.qty), 0);
+}
 function getCartTax() {
-  const s = getCartSubtotal();
+  const s = getTaxableSubtotal();
   return s > 0 ? Math.floor(s * 0.1) : 0;
 }
 function getCartSC() {
-  return state.scEnabled && getCartSubtotal() > 0 ? Math.floor(getCartSubtotal() * 0.15) : 0;
+  const s = getTaxableSubtotal();
+  return state.scEnabled && s > 0 ? Math.floor(s * 0.15) : 0;
 }
 function getCartCardFee() {
   if (state.paymentMethod !== "card") return 0;
@@ -100,6 +106,7 @@ function snapshotSession() {
   return {
     customerType: state.customerType,
     source: state.source,
+    catchName: state.catchName,
     cast: state.cast,
     castsArr: [...state.castsArr],
     guestCount: state.guestCount,
@@ -112,6 +119,7 @@ function snapshotSession() {
 function applySession(s) {
   state.customerType = s.customerType || null;
   state.source = s.source || null;
+  state.catchName = s.catchName || null;
   state.cast = s.cast || null;
   state.castsArr = Array.isArray(s.castsArr) ? [...s.castsArr] : (s.cast ? s.cast.split("・") : []);
   state.guestCount = s.guestCount || 0;
@@ -313,6 +321,7 @@ function renderMenu() {
           `<button class="menu-item" data-id="${item.id}"><span class="emoji">${item.emoji}</span><span class="name">${item.name}</span><span class="price">${fmt(item.price)}</span></button>`
       )
       .join("");
+    oh += `<button class="menu-item menu-item-custom" id="btn-open-waribiki-other"><span class="emoji">🏷️</span><span class="name">割引</span><span class="price">金額指定</span></button>`;
     oh += `<button class="menu-item menu-item-custom" id="btn-open-custom"><span class="emoji">📝</span><span class="name">フリー入力</span><span class="price">自由金額</span></button>`;
     c.innerHTML = oh;
     c.querySelectorAll(".menu-item:not(.menu-item-custom)").forEach((el) => {
@@ -321,6 +330,10 @@ function renderMenu() {
     document.getElementById("btn-open-custom").addEventListener("click", () => {
       if (!guardTable()) return;
       openCustomModal();
+    });
+    document.getElementById("btn-open-waribiki-other").addEventListener("click", () => {
+      if (!guardTable()) return;
+      openWaribikiModal();
     });
     return;
   }
@@ -505,7 +518,7 @@ document.getElementById("btn-recipient-confirm").addEventListener("click", () =>
 // Table modal
 // ============================
 function hideAllTableSteps() {
-  ["table-step0-resume", "table-step1", "table-step2-new", "table-step2-repeat", "table-step3-guests"].forEach((id) => {
+  ["table-step0-resume", "table-step1", "table-step2-new", "table-step2-repeat", "table-step3-guests", "table-step-catch"].forEach((id) => {
     document.getElementById(id).classList.add("hidden");
   });
 }
@@ -592,8 +605,43 @@ document.querySelectorAll(".source-btn").forEach((b) => {
     state.pendingType = "new";
     state.pendingSource = b.dataset.source;
     state.pendingRepeatCasts = [];
-    goToGuestStep();
+    if (b.dataset.source === "キャッチ") {
+      openCatchStep();
+    } else {
+      state.pendingCatchName = null;
+      goToGuestStep();
+    }
   });
+});
+
+function openCatchStep() {
+  hideAllTableSteps();
+  document.getElementById("table-step-catch").classList.remove("hidden");
+  document.getElementById("catch-manual-input").value = "";
+  const list = loadCastList();
+  const el = document.getElementById("catch-cast-list");
+  if (list.length === 0) {
+    el.innerHTML = '<p class="modal-hint">キャストタブで名前を登録してください</p>';
+  } else {
+    el.innerHTML = list.map((n) => `<button type="button" class="cast-pick-btn" data-catch="${escapeAttr(n)}">${escapeHtml(n)}</button>`).join("");
+    el.querySelectorAll("[data-catch]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.getElementById("catch-manual-input").value = btn.dataset.catch;
+      });
+    });
+  }
+}
+
+document.getElementById("btn-catch-confirm").addEventListener("click", () => {
+  const name = document.getElementById("catch-manual-input").value.trim();
+  if (!name) { alert("名前を選択または入力してください"); return; }
+  state.pendingCatchName = name;
+  goToGuestStep();
+});
+
+document.getElementById("btn-catch-skip").addEventListener("click", () => {
+  state.pendingCatchName = null;
+  goToGuestStep();
 });
 
 function renderCastPicker() {
@@ -680,6 +728,7 @@ function finishCheckin(guests) {
   if (state.pendingType === "new") {
     state.customerType = "new";
     state.source = state.pendingSource;
+    state.catchName = state.pendingCatchName || null;
     state.cast = null;
     state.castsArr = [];
     state.checkinTime = new Date().toISOString();
@@ -687,6 +736,7 @@ function finishCheckin(guests) {
   } else {
     state.customerType = "repeat";
     state.source = null;
+    state.catchName = null;
     state.castsArr = [...state.pendingRepeatCasts];
     state.cast = state.castsArr.length ? state.castsArr.join("・") : null;
     state.checkinTime = new Date().toISOString();
@@ -742,6 +792,31 @@ document.getElementById("btn-add-discount").addEventListener("click", () => {
   unlockScroll();
 });
 
+function openWaribikiModal() {
+  document.getElementById("modal-waribiki").classList.remove("hidden");
+  document.getElementById("waribiki-name").value = "";
+  document.getElementById("waribiki-price").value = "";
+  document.getElementById("waribiki-name").focus();
+  lockScroll();
+}
+document.getElementById("btn-close-waribiki").addEventListener("click", () => {
+  document.getElementById("modal-waribiki").classList.add("hidden");
+  unlockScroll();
+});
+document.getElementById("btn-add-waribiki").addEventListener("click", () => {
+  const name = document.getElementById("waribiki-name").value.trim() || "割引";
+  const price = parseInt(document.getElementById("waribiki-price").value, 10) || 0;
+  if (price <= 0) {
+    alert("割引金額を入力してください");
+    return;
+  }
+  state.customIdCounter++;
+  pushCartLine({ id: state.customIdCounter, name: `${name} (−¥${price.toLocaleString()})`, price: -price, category: "other", emoji: "🏷️", qty: 1, isCustom: true });
+  renderCart();
+  document.getElementById("modal-waribiki").classList.add("hidden");
+  unlockScroll();
+});
+
 function openCustomModal() {
   document.getElementById("modal-custom").classList.remove("hidden");
   document.getElementById("custom-name").value = "";
@@ -776,6 +851,7 @@ function clearCart() {
   state.tableNumber = null;
   state.customerType = null;
   state.source = null;
+  state.catchName = null;
   state.cast = null;
   state.castsArr = [];
   state.guestCount = 0;
@@ -849,6 +925,7 @@ function updateTableBadge() {
     tb.classList.add("active");
     let info = state.customerType === "new" ? "🆕 新規" : "🔄 リピート";
     if (state.source) info += ` (${state.source})`;
+    if (state.catchName) info += ` 🤝${state.catchName}`;
     if (state.cast) info = `👑 ${state.cast}`;
     if (state.checkinTime) {
       const t = new Date(state.checkinTime);
@@ -962,6 +1039,7 @@ document.getElementById("btn-confirm-payment").addEventListener("click", () => {
     tableNumber: state.tableNumber,
     customerType: state.customerType,
     source: state.source,
+    catchName: state.catchName,
     cast: state.cast,
     castsArr: [...state.castsArr],
     guestCount: state.guestCount,
@@ -983,7 +1061,10 @@ function showReceipt(order) {
   const scH = order.scEnabled ? `<div class="receipt-item"><span>SC (15%)</span><span>${fmt(order.sc)}</span></div>` : "";
   const cfH = order.cardFee > 0 ? `<div class="receipt-item"><span>カード手数料 (8%)</span><span>${fmt(order.cardFee)}</span></div>` : "";
   let infoH = `<div class="receipt-cast">🪑 卓${order.tableNumber} ｜ ${order.guestCount}名`;
-  if (order.customerType === "new") infoH += ` ｜ 🆕 新規 (${order.source})`;
+  if (order.customerType === "new") {
+    infoH += ` ｜ 🆕 新規 (${order.source})`;
+    if (order.catchName) infoH += ` 🤝${escapeHtml(order.catchName)}`;
+  }
   if (order.cast) infoH += ` ｜ 👑 ${escapeHtml(order.cast)}`;
   const cin = order.checkinTime ? fmtDT(order.checkinTime) : "";
   const cout = order.checkoutTime ? fmtDT(order.checkoutTime) : "";
@@ -1017,6 +1098,7 @@ function afterReceiptClose() {
   state.tableNumber = null;
   state.customerType = null;
   state.source = null;
+  state.catchName = null;
   state.cast = null;
   state.castsArr = [];
   state.guestCount = 0;
@@ -1316,12 +1398,13 @@ function renderDailyReport() {
       const orderNum = `#${o.id.toString().padStart(4, "0")}`;
       const isNew = o.customerType === "new";
       const newBadge = isNew ? `<span class="new-badge">${o.source || "新規"}</span>` : "";
+      const catchBadge = o.catchName ? `<span class="catch-badge">🤝${escapeHtml(o.catchName)}</span>` : "";
       custRows += `<tr>
         <td class="num-cell">${i + 1}</td>
         <td class="num-cell">${guests}</td>
         <td>${cin}</td>
         <td>${cout}</td>
-        <td class="name-cell">${orderNum}${newBadge}</td>
+        <td class="name-cell">${orderNum}${newBadge}${catchBadge}</td>
         <td class="amount-cell">${fmt(o.total)}</td>
       </tr>`;
     } else {
@@ -1408,11 +1491,12 @@ function renderDailyReport() {
   const newOrders = orders.filter((o) => o.customerType === "new");
   let sourceRows = "";
   if (newOrders.length === 0) {
-    sourceRows = `<tr><td colspan="3" style="color:var(--text-muted);font-size:11px;">なし</td></tr>`;
+    sourceRows = `<tr><td colspan="4" style="color:var(--text-muted);font-size:11px;">なし</td></tr>`;
   } else {
     newOrders.forEach((o) => {
       const orderNum = `#${o.id.toString().padStart(4, "0")}`;
-      sourceRows += `<tr><td class="name-cell">${orderNum}</td><td>${escapeHtml(o.source || "不明")}</td><td class="num-cell">${o.guestCount || ""}名</td></tr>`;
+      const catchInfo = o.catchName ? escapeHtml(o.catchName) : "";
+      sourceRows += `<tr><td class="name-cell">${orderNum}</td><td>${escapeHtml(o.source || "不明")}</td><td class="name-cell">${catchInfo}</td><td class="num-cell">${o.guestCount || ""}名</td></tr>`;
     });
   }
 
@@ -1456,7 +1540,7 @@ function renderDailyReport() {
         <div class="report-section">
           <h3>🆕 新規流入経路</h3>
           <table class="report-table">
-            <thead><tr><th>伝票</th><th>流入経路</th><th>人数</th></tr></thead>
+            <thead><tr><th>伝票</th><th>流入経路</th><th>キャッチ</th><th>人数</th></tr></thead>
             <tbody>${sourceRows}</tbody>
           </table>
         </div>
@@ -1608,68 +1692,54 @@ document.getElementById("btn-pdf-download").addEventListener("click", () => {
     return;
   }
 
-  const fontsLink = Array.from(document.querySelectorAll("link[href*='fonts.googleapis']"))
-    .map((l) => l.outerHTML).join("");
-
-  let cssText = "";
-  try {
-    for (const sheet of document.styleSheets) {
-      try {
-        for (const rule of sheet.cssRules) cssText += rule.cssText + "\n";
-      } catch { /* cross-origin */ }
-    }
-  } catch { /* ignore */ }
-
-  printWin.document.write(`<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="ja"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>日報 - ${escapeHtml(dateLabel)}</title>
-${fontsLink}
 <style>
-${cssText}
-body { background: #fff !important; color: #000 !important; padding: 20px; overflow: auto; height: auto; }
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Noto Sans JP", sans-serif; background: #fff; color: #000; padding: 20px; overflow: auto; height: auto; }
 .hidden { display: none !important; }
 .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .report-cast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.report-section { background: #fff !important; border: 1px solid #999 !important; border-radius: 8px; padding: 14px; margin-bottom: 14px; break-inside: avoid; }
-.report-section h3 { font-size: 14px; font-weight: 700; color: #333 !important; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #ccc !important; }
+.report-section { background: #fff; border: 1px solid #999; border-radius: 8px; padding: 14px; margin-bottom: 14px; break-inside: avoid; }
+.report-section h3 { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #ccc; }
 .report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .report-table th, .report-table td { padding: 5px 8px; border: 1px solid #bbb; text-align: center; white-space: nowrap; }
-.report-table th { background: #eee !important; color: #000 !important; font-weight: 700; font-size: 11px; }
-.report-table td { color: #000 !important; }
-.report-table .row-label { text-align: left; font-weight: 600; color: #333 !important; background: #f5f5f5 !important; }
-.report-table .row-total { font-weight: 800; color: #8b6914 !important; background: #fff8e7 !important; }
-.report-table .row-total td { border-color: #999 !important; }
+.report-table th { background: #eee; color: #000; font-weight: 700; font-size: 11px; }
+.report-table td { color: #000; }
+.report-table .row-label { text-align: left; font-weight: 600; color: #333; background: #f5f5f5; }
+.report-table .row-total { font-weight: 800; color: #8b6914; background: #fff8e7; }
+.report-table .row-total td { border-color: #999; }
 .report-table .amount-cell { text-align: right; font-variant-numeric: tabular-nums; }
 .report-table .num-cell { text-align: center; }
 .report-table .name-cell { text-align: left; }
-.new-badge { display: inline-block; font-size: 9px; font-weight: 700; color: #16a34a !important; background: #dcfce7 !important; padding: 1px 5px; border-radius: 50px; margin-left: 4px; }
-.expense-total-row { display: flex; justify-content: space-between; padding: 6px 8px; background: #f5f5f5 !important; border-radius: 6px; font-size: 13px; font-weight: 700; color: #333 !important; }
+.new-badge { display: inline-block; font-size: 9px; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 1px 5px; border-radius: 50px; margin-left: 4px; }
+.catch-badge { display: inline-block; font-size: 9px; font-weight: 700; color: #2563eb; background: #dbeafe; padding: 1px 5px; border-radius: 50px; margin-left: 4px; }
+.expense-total-row { display: flex; justify-content: space-between; padding: 6px 8px; background: #f5f5f5; border-radius: 6px; font-size: 13px; font-weight: 700; color: #333; }
 .expense-input-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
 .expense-input-row input { padding: 4px 6px; border: 1px solid #bbb; border-radius: 4px; background: #fff; color: #000; font-size: 12px; }
 .expense-input-row input[type="text"] { flex: 1; }
 .expense-input-row input[type="number"] { width: 100px; text-align: right; }
 .btn-expense-del, .btn-expense-add { display: none !important; }
-.daily-pay-section { margin-top: 8px; }
+.expense-input-row:not([data-eidx]) { display: none !important; }
 .daily-pay-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
-.daily-pay-row label { font-size: 12px; font-weight: 600; color: #333 !important; min-width: 60px; }
+.daily-pay-row label { font-size: 12px; font-weight: 600; color: #333; min-width: 60px; }
 .daily-pay-row input { width: 120px; padding: 4px 6px; border: 1px solid #bbb; border-radius: 4px; background: #fff; color: #000; font-size: 12px; text-align: right; }
 .report-print-header { text-align: center; margin-bottom: 20px; }
 .report-print-header h1 { font-family: "Cormorant Garamond", serif; font-size: 28px; letter-spacing: 4px; margin-bottom: 4px; color: #000; }
 .report-print-header p { font-size: 16px; color: #555; }
-.report-notes-section textarea { width: 100%; border: 1px solid #bbb; border-radius: 4px; padding: 8px; font-size: 12px; color: #000; background: #fff; resize: vertical; }
-@media print {
-  body { padding: 0; margin: 10px; }
-  .expense-input-row:last-child:not([data-eidx]) { display: none !important; }
-}
+@media print { body { padding: 0; margin: 10px; } }
 </style>
 </head><body>
 <div class="report-print-header"><h1>Gift</h1><p>日報 ─ ${escapeHtml(dateLabel)}</p></div>
 ${content.innerHTML}
-</body></html>`);
+<script>document.fonts.ready.then(function(){ setTimeout(function(){ window.print(); }, 200); });</script>
+</body></html>`;
+  printWin.document.write(html);
   printWin.document.close();
-  printWin.onload = () => setTimeout(() => printWin.print(), 300);
 });
 
 // ============================

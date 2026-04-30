@@ -147,7 +147,17 @@
               <button class="source-btn" data-source="看板">🪧 看板</button>
               <button class="source-btn" data-source="インスタ">📸 インスタ</button>
               <button class="source-btn" data-source="Tiktok">🎵 Tiktok</button>
+              <button class="source-btn" data-source="キャッチ">🤝 キャッチ</button>
               <button class="source-btn source-btn-other" data-source="その他">❓ その他</button>
+            </div>
+          </div>
+          <div id="table-step-catch" class="hidden">
+            <p class="modal-label">誰が連れてきましたか？</p>
+            <div class="cast-picker-list" id="catch-cast-list"></div>
+            <input type="text" id="catch-manual-input" class="modal-text-input" placeholder="または名前を手入力" autocomplete="off">
+            <div class="repeat-btns">
+              <button class="btn-confirm-cast" id="btn-catch-confirm">次へ（人数）</button>
+              <button class="btn-free-repeat" id="btn-catch-skip">スキップ</button>
             </div>
           </div>
           <div id="table-step2-repeat" class="hidden">
@@ -239,6 +249,30 @@
           <div class="custom-field"><label>商品名</label><input type="text" id="custom-name" placeholder="商品名を入力" autocomplete="off"></div>
           <div class="custom-field"><label>金額（税抜）</label><div class="custom-price-input"><span class="yen-prefix">¥</span><input type="number" id="custom-price" placeholder="0" min="0" step="100"></div></div>
           <button class="btn-add-custom" id="btn-add-custom">伝票に追加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 割引モーダル -->
+    <div class="modal-overlay hidden" id="modal-waribiki">
+      <div class="modal modal-custom">
+        <div class="modal-header">
+          <h2>🏷️ 割引</h2>
+          <button class="modal-close" id="btn-close-waribiki">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="custom-field">
+            <label>割引名（例: 誕生日割引）</label>
+            <input type="text" id="waribiki-name" placeholder="割引名を入力" autocomplete="off">
+          </div>
+          <div class="custom-field">
+            <label>割引金額</label>
+            <div class="custom-price-input">
+              <span class="yen-prefix">¥</span>
+              <input type="number" id="waribiki-price" placeholder="0" min="0" step="100">
+            </div>
+          </div>
+          <button class="btn-add-custom" id="btn-add-waribiki">割引を適用</button>
         </div>
       </div>
     </div>

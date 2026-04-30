@@ -22,6 +22,7 @@ const MENU_DATA = {
     { id: 6, name: "推し指名", price: 2000, category: "system", emoji: "👑" },
     { id: 7, name: "場内指名", price: 1000, category: "system", emoji: "💫" },
     { id: 8, name: "同伴", price: 2000, category: "system", emoji: "🤝" },
+    { id: 9, name: "新規特別プラン", price: 1000, category: "system", emoji: "🌟", isTaxFree: true },
 
     // ===== ショット =====
     { id: 10, name: "イエガー", price: 1500, category: "shot", emoji: "🥃" },
