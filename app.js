@@ -65,21 +65,21 @@ function getCartSubtotal() {
 function getTaxableSubtotal() {
   return state.cart.reduce((s, i) => s + (i.isTaxFree ? 0 : i.price * i.qty), 0);
 }
-function getCartTax() {
-  const s = getTaxableSubtotal();
-  return s > 0 ? Math.floor(s * 0.1) : 0;
-}
 function getCartSC() {
   const s = getTaxableSubtotal();
   return state.scEnabled && s > 0 ? Math.floor(s * 0.15) : 0;
 }
+function getCartTax() {
+  const taxable = getTaxableSubtotal() + getCartSC();
+  return taxable > 0 ? Math.floor(taxable * 0.1) : 0;
+}
 function getCartCardFee() {
   if (state.paymentMethod !== "card") return 0;
-  const b = getCartSubtotal() + getCartTax() + getCartSC();
+  const b = getCartSubtotal() + getCartSC() + getCartTax();
   return b > 0 ? Math.floor(b * 0.08) : 0;
 }
 function getCartTotal() {
-  return Math.max(0, getCartSubtotal() + getCartTax() + getCartSC() + getCartCardFee());
+  return Math.max(0, getCartSubtotal() + getCartSC() + getCartTax() + getCartCardFee());
 }
 
 function saveOrders() {
